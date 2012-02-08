@@ -205,6 +205,10 @@ namespace FSMGen
 				statement.Consume(rawtokens);
 				if (statement.ShouldPush())
 				{
+					//we need to add it to the current state, if it exists.
+					//it may not exist if this is the first statement (Global)
+					if(statements.Count > 0)
+						statements.Peek().Statements().Add(statement);
 					statements.Push(statement);
 				}
 				else if (statement.ShouldPop())
