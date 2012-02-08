@@ -158,6 +158,9 @@ namespace FSMGen
 				Tokens.Add("class", typeof(ClassStatement));
 				Tokens.Add("interfacecommand", typeof(InterfaceCommandStatement));
 				Tokens.Add("state", typeof(StateStatement));
+				Tokens.Add("test", typeof(TestStatement));
+				Tokens.Add("initial", typeof(InitialStatement));
+				Tokens.Add("update", typeof(UpdateStatement));
 				Tokens.Add("transition", typeof(TransitionStatement));
 				Tokens.Add("endstate", typeof(GenericPopStatement));
 				Tokens.Add("endfsm", typeof(GenericPopStatement));
@@ -179,11 +182,15 @@ namespace FSMGen
 
 		public FSM(string buffer)
 		{
+			InitTokensDictionary();
 			rawtokens = new Queue<string>(buffer.Split(null));
 
 			while (rawtokens.Count > 0)
 			{
 				string token = rawtokens.Dequeue();
+
+				if (token == "")
+					continue;
 
 				if (!IsToken(token))
 					throw new MalformedFSMException("Unexpected identifier " + token + ", expected keyword.");
@@ -191,6 +198,7 @@ namespace FSMGen
 				Type statementtype = Tokens[token];
 
 				Statement statement = (Statement)Activator.CreateInstance(statementtype);
+				statement.owner = this;
 
 				System.Diagnostics.Debug.Assert(statement != null);
 
