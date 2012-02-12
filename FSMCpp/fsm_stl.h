@@ -91,7 +91,7 @@ namespace FSM {
 		std::string name;
 		bool initial;
 
-		std::vector<State> children;
+		std::vector<State*> children;
 		onEnterFunc onEnter;
 		onEnterFunc onExit;
 		updateFunc update;
@@ -135,7 +135,7 @@ namespace FSM {
 
 		void addChild( State<T>& child )
 		{
-			children.push_back( child);
+			children.push_back(& child);
 		}
 
 	};
