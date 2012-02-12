@@ -2,6 +2,7 @@
 #define FSM_STL_H
 
 #include <vector>
+#include <string>
 #include <map>
 
 namespace FSM {
@@ -72,6 +73,12 @@ namespace FSM {
 		}
 	};
 
+#define FSM_INIT_STATE_UPDATE( classname, statename, initial) \
+	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename);
+
+#define FSM_INIT_STATE( classname, statename, initial) \
+	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename);
+
 	template <class T>
 	class State
 	{
@@ -89,16 +96,21 @@ namespace FSM {
 		onEnterFunc onExit;
 		updateFunc update;
 		std::vector<Transition<T> > transitions;
-	
+	public:	
 		State(std::string _name, bool _initial, onEnterFunc _onEnter, onExitFunc _onExit, updateFunc _update = NULL) 
-			: name(_name)
-			, initial(_intial)
-			, onEnter(_onEnter)
-			, onExit(_onExit),
-			, update(_update)
 		{
+			init(_name, _initial, _onEnter, _onExit, _update);
 		}
 		
+		void init(std::string _name, bool _initial, onEnterFunc _onEnter, onExitFunc _onExit, updateFunc _update = NULL)
+		{
+			name = _name;
+			initial = _initial;
+			onEnter = _onEnter;
+			onExit = _onExit;
+			update = _update;
+		}
+
 		void registerTransition(transitionFunc transition, State<T>* target)
 		{
 			transitions.push_back( Transition(transition, target) );
@@ -114,6 +126,10 @@ namespace FSM {
 			transitions.push_back( Transition(func, command, target) );
 		}
 
+		void addChild( State<T>* child )
+		{
+			children.push_back(child);
+		}
 
 	};
 }

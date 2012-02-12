@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
+    <None Include="..\FSMGen\fsminput.fsm" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
