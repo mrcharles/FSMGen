@@ -71,7 +71,7 @@ class MyClass
 int _tmain(int argc, _TCHAR* argv[])
 {
 	MyClass c;
-	c.InitializeFMS();
+	c.InitializeFSM();
 	
 	return 0;
 }
