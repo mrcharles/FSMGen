@@ -97,6 +97,13 @@ namespace FSM {
 		updateFunc update;
 		std::vector<Transition<T> > transitions;
 	public:	
+		State()
+		{
+			initial = false;
+			onEnter = NULL;
+			onExit = NULL;
+			update = NULL;
+		}
 		State(std::string _name, bool _initial, onEnterFunc _onEnter, onExitFunc _onExit, updateFunc _update = NULL) 
 		{
 			init(_name, _initial, _onEnter, _onExit, _update);
@@ -126,9 +133,9 @@ namespace FSM {
 			transitions.push_back( Transition(func, command, target) );
 		}
 
-		void addChild( State<T>* child )
+		void addChild( State<T>& child )
 		{
-			children.push_back(child);
+			children.push_back( child);
 		}
 
 	};

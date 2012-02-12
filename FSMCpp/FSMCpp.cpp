@@ -44,7 +44,7 @@ class MyClass
 	void onExitSubstateBB(){}
 
 
-
+	FSM::State<MyClass> FSM;
 	FSM::State<MyClass> TestA;
 	FSM::State<MyClass> SubstateAA;
 	FSM::State<MyClass> SubstateAB;
@@ -52,8 +52,13 @@ class MyClass
 	FSM::State<MyClass> SubstateBA;
 	FSM::State<MyClass> SubstateBB;
 
+public:
+	MyClass()
+	{
+		InitializeFSM();
+	}
 
-
+private:
 	void InitializeFSM()
 	{
 		FSM_INIT_STATE_UPDATE(MyClass, TestA, true);
@@ -63,6 +68,14 @@ class MyClass
 		FSM_INIT_STATE(MyClass, SubstateBA, false);
 		FSM_INIT_STATE(MyClass, SubstateBB, false);
 		
+
+		FSM.addChild(TestA);
+		FSM.addChild(TestB);
+		TestA.addChild(SubstateAA);
+		TestA.addChild(SubstateAB);
+		TestB.addChild(SubstateBA);
+		TestB.addChild(SubstateBB);
+		
 	}
 };
 
@@ -71,7 +84,7 @@ class MyClass
 int _tmain(int argc, _TCHAR* argv[])
 {
 	MyClass c;
-	c.InitializeFSM();
+	//c.InitializeFSM();
 	
 	return 0;
 }
