@@ -25,9 +25,56 @@ namespace FSM {
 	template <class T>
 	class State;
 
+#define DECLARE_TYPEDEFS(T) \
+   		typedef void(T::*onEnterFunc)(); \
+		typedef void(T::*onExitFunc)();	  \
+		typedef void(T::*updateFunc)(float dt);	\
+		typedef bool(T::*transitionFunc)();		 \
+		typedef InterfaceResult::Enum (T::*interfaceFunc)( InterfaceParam* param );	\
+		typedef void(T::*execInterfaceFunc)( InterfaceParam* param );				 \
+		typedef void(T::*execFunc)();
+
+	template <class T>
+	class Transition
+	{
+		DECLARE_TYPEDEFS(T);
+
+		transitionFunc fTransition;
+		interfaceFunc fInterface;
+		execInterfaceFunc fExecInterface;
+		execFunc fExec;
+
+		int interfaceCommand;
+
+		State<T>* target;
+
+	public:
+		Transition(transitionFunc func, execFunc execFunc, State<T>* _target)
+		{
+			interfaceCommand = -1;
+			fTransition = func;
+			fInterface = NULL;
+	;		fExecInterface = NULL;
+			fExec = execFunc;
+			target = _target;
+		}
+
+		Transition(interfaceFunc func, execInterfaceFunc execFunc, int command, State<T>* _target)
+		{
+			interfaceCommand = command;
+			fTransition = NULL;
+			fExec = NULL;
+			fInterface = func;
+			fExecInterface = execFunc;
+			target = _target;
+		}
+	};
+
 	template <class T>
 	class StateMachine
 	{
+		DECLARE_TYPEDEFS(T);
+
 		std::map<std::string, State<T>*> states;
 
 		void registerState(std::string name, State<T>* state)
@@ -35,43 +82,24 @@ namespace FSM {
 			states[name] = state;
 		}
 
+		void setChild(std::string _parent, std::string _child)
+		{
+			State<T>* parent = states[_parent];
+			State<T>* child = states[_child];
+			parent->addChild(child);
+		}
+
 		State<T>* getState(std::string name)
 		{
 			return states[name];
 		}
 
-	};
-
-	template <class T>
-	class Transition
-	{
-		typedef bool(T::*transitionFunc)();
-		typedef InterfaceResult::Enum (T::*interfaceFunc)( InterfaceParam* param );
-
-		transitionFunc fTransition;
-		interfaceFunc fInterface;
-
-		int interfaceCommand;
-
-		State<T>* target;
-
-	public:
-		Transition(transitionFunc func, State<T>* _target)
+		void setTransition(transitionFunc func, execFunc execFunc, State<T>* _target)
 		{
-			interfaceCommand = -1;
-			fTransition = func;
-			fInterface = NULL;
-			target = _target;
-		}
-
-		Transition(interfaceFunc func, int command, State<T>* _target)
-		{
-			interfaceCommand = command;
-			fTransition = NULL;
-			fInterface = func;
-			target = _target;
+			
 		}
 	};
+
 
 #define FSM_INIT_STATE_UPDATE( classname, statename, initial) \
 	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename);
@@ -82,11 +110,7 @@ namespace FSM {
 	template <class T>
 	class State
 	{
-		typedef void(T::*onEnterFunc)();
-		typedef void(T::*onExitFunc)();
-		typedef void(T::*updateFunc)(float dt);
-		typedef bool(T::*transitionFunc)();
-		typedef InterfaceResult::Enum (T::*interfaceFunc)( InterfaceParam* param );
+		DECLARE_TYPEDEFS(T);
 
 		std::string name;
 		bool initial;

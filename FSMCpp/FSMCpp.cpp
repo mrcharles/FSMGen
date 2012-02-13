@@ -12,14 +12,7 @@ class MyClass
 	};
 
 	//declaration
-	//super state
-	void onEnterFSM(){}
-	void onExitFSM(){}
-	void updateFSM(float dt)
-	{
-	
-	}
-
+	FSM::StateMachine<MyClass> FSM;
 
 	//State TestA
 	void onEnterTestA(){}
@@ -53,7 +46,6 @@ class MyClass
 	void onExitSubstateBB(){}
 
 
-	FSM::State<MyClass> FSM;
 	FSM::State<MyClass> TestA;
 	FSM::State<MyClass> SubstateAA;
 	FSM::State<MyClass> SubstateAB;
@@ -70,7 +62,6 @@ public:
 private:
 	void InitializeFSM()
 	{
-		FSM_INIT_STATE_UPDATE(MyClass, FSM, true);
 		FSM_INIT_STATE_UPDATE(MyClass, TestA, true);
 		FSM_INIT_STATE(MyClass, SubstateAA, true);
 		FSM_INIT_STATE(MyClass, SubstateAB, false);
@@ -79,12 +70,12 @@ private:
 		FSM_INIT_STATE(MyClass, SubstateBB, false);
 		
 
-		FSM.addChild(TestA);
-		FSM.addChild(TestB);
 		TestA.addChild(SubstateAA);
 		TestA.addChild(SubstateAB);
 		TestB.addChild(SubstateBA);
 		TestB.addChild(SubstateBB);
+
+		//SubstateAA.registerTransition(
 		
 	}
 };
