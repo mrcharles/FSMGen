@@ -32,14 +32,21 @@ namespace FSM {
 		typedef bool(T::*testFunc)();		 \
 		typedef InterfaceResult::Enum (T::*testInterfaceFunc)( InterfaceParam* param );	\
 		typedef void(T::*execInterfaceFunc)( InterfaceParam* param );				 \
-		typedef void(T::*execFunc)();
-
+		typedef void(T::*execFunc)();  \
+	protected: \
+		T *_instance; \
+	public: \
+		void setInstance( T* instance ) \
+			{ _instance = instance; } 	
+	
 
 	class TransitionBase
 	{
 		std::string target;
 	public:
-		TransitionBase(const std::string &_target)
+		TransitionBase()
+		{}
+		void init(const std::string &_target)
 		{
 			target = _target;
 		}
@@ -52,28 +59,32 @@ namespace FSM {
 	class Transition : public TransitionBase
 	{
 		DECLARE_TYPEDEFS(T);
+	private:
 
 		testFunc fTest;
 		execFunc fExec;
 
 	public:
-		Transition(testFunc test, execFunc exec, const std::string target)
-			: TransitionBase(target)
-			, fTest(test)
-			, fExec(exec)
+		Transition()
+		{}
+
+		void init(testFunc test, execFunc exec, const std::string target)
 		{
+			fTest = test;
+			fExec = exec;
+			TransitionBase::init(target);
 		}
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL)
 		{
-			if( (*fTest)() )
+			if( (_instance->*fTest)() )
 				return InterfaceResult::Success;
 
 			return InterfaceResult::Failed;
 		}
 		virtual void exec(InterfaceParam* param = NULL)
 		{
-			(*fExec)();
+			(_instance->*fExec)();
 		}
 	};
 
@@ -81,7 +92,7 @@ namespace FSM {
 	class InterfaceCommand : public TransitionBase
 	{
 		DECLARE_TYPEDEFS(T);
-
+	private:
 		testInterfaceFunc fTestInterface;
 		execInterfaceFunc fExecInterface;
 
@@ -89,20 +100,21 @@ namespace FSM {
 
 
 	public:
-		InterfaceCommand(testInterfaceFunc test, execInterfaceFunc exec, int command)
-			: TransitionBase("")
-			, fTestInterface(test)
-			, fExecInterface(exec)
+		void init(testInterfaceFunc test, execInterfaceFunc exec, int command)
 		{
+			fTestInterface = test;
+			fExecInterface = exec;
+			interfaceCommand = command;
+			TransitionBase::init("");
 		}
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param)
 		{
-			return  (*fTestInterface)(param);
+			return  (_instance->*fTestInterface)(param);
 		}
 		virtual void exec(InterfaceParam* param )
 		{
-			(*fExecInterface)(param);
+			(_instance->*fExecInterface)(param);
 		}
 
 	};
@@ -112,11 +124,13 @@ namespace FSM {
 	{
 		DECLARE_TYPEDEFS(T);
 
-		InterfaceTransition(testInterfaceFunc test, execInterfaceFunc exec, int command, const std::string &target)
-			: InterfaceCommand(test, exec, command)
-			, TransitionBase(target)
+	public:
+		void init(testInterfaceFunc test, execInterfaceFunc exec, int command, const std::string &target)
 		{
+			InterfaceCommand::init(test, exec, command);
+			TransitionBase::init(target);
 		}
+
 	};
 
 	template <class T>
@@ -156,9 +170,11 @@ namespace FSM {
 
 
 #define FSM_INIT_STATE_UPDATE( classname, statename, initial) \
+	statename.setInstance(this);\
 	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename);
 
 #define FSM_INIT_STATE( classname, statename, initial) \
+	statename.setInstance(this);\
 	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename);
 
 	template <class T>

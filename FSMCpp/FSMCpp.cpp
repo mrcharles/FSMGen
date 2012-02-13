@@ -49,7 +49,10 @@ class MyClass
 
 
 	FSM::State<MyClass> TestA;
+	//FSM::InterfaceCommand<MyClass> TestAOnMyNamedCommand;
 	FSM::State<MyClass> SubstateAA;
+	FSM::Transition<MyClass> SubstateAAToSubstateAB;
+	//FSM::InterfaceTransition<MyClass> SubstateABToTestB;
 	FSM::State<MyClass> SubstateAB;
 	FSM::State<MyClass> TestB;
 	FSM::State<MyClass> SubstateBA;
