@@ -14,6 +14,8 @@ class MyClass
 	//declaration
 	FSM::StateMachine<MyClass> FSM;
 
+	
+
 	//State TestA
 	void onEnterTestA(){}
 	void onExitTestA(){}

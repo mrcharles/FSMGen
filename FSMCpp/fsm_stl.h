@@ -29,44 +29,93 @@ namespace FSM {
    		typedef void(T::*onEnterFunc)(); \
 		typedef void(T::*onExitFunc)();	  \
 		typedef void(T::*updateFunc)(float dt);	\
-		typedef bool(T::*transitionFunc)();		 \
-		typedef InterfaceResult::Enum (T::*interfaceFunc)( InterfaceParam* param );	\
+		typedef bool(T::*testFunc)();		 \
+		typedef InterfaceResult::Enum (T::*testInterfaceFunc)( InterfaceParam* param );	\
 		typedef void(T::*execInterfaceFunc)( InterfaceParam* param );				 \
 		typedef void(T::*execFunc)();
 
+
+	class TransitionBase
+	{
+		std::string target;
+	public:
+		TransitionBase(const std::string &_target)
+		{
+			target = _target;
+		}
+		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL) = 0;
+		virtual void exec(InterfaceParam* param = NULL) = 0;
+		const std::string& getTarget() const { return target; }
+	};
+
 	template <class T>
-	class Transition
+	class Transition : public TransitionBase
 	{
 		DECLARE_TYPEDEFS(T);
 
-		transitionFunc fTransition;
-		interfaceFunc fInterface;
-		execInterfaceFunc fExecInterface;
+		testFunc fTest;
 		execFunc fExec;
+
+	public:
+		Transition(testFunc test, execFunc exec, const std::string target)
+			: TransitionBase(target)
+			, fTest(test)
+			, fExec(exec)
+		{
+		}
+
+		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL)
+		{
+			if( (*fTest)() )
+				return InterfaceResult::Success;
+
+			return InterfaceResult::Failed;
+		}
+		virtual void exec(InterfaceParam* param = NULL)
+		{
+			(*fExec)();
+		}
+	};
+
+	template <class T>
+	class InterfaceCommand : public TransitionBase
+	{
+		DECLARE_TYPEDEFS(T);
+
+		testInterfaceFunc fTestInterface;
+		execInterfaceFunc fExecInterface;
 
 		int interfaceCommand;
 
-		State<T>* target;
 
 	public:
-		Transition(transitionFunc func, execFunc execFunc, State<T>* _target)
+		InterfaceCommand(testInterfaceFunc test, execInterfaceFunc exec, int command)
+			: TransitionBase("")
+			, fTestInterface(test)
+			, fExecInterface(exec)
 		{
-			interfaceCommand = -1;
-			fTransition = func;
-			fInterface = NULL;
-	;		fExecInterface = NULL;
-			fExec = execFunc;
-			target = _target;
 		}
 
-		Transition(interfaceFunc func, execInterfaceFunc execFunc, int command, State<T>* _target)
+		virtual InterfaceResult::Enum test(InterfaceParam* param)
 		{
-			interfaceCommand = command;
-			fTransition = NULL;
-			fExec = NULL;
-			fInterface = func;
-			fExecInterface = execFunc;
-			target = _target;
+			return  (*fTestInterface)(param);
+		}
+		virtual void exec(InterfaceParam* param )
+		{
+			(*fExecInterface)(param);
+		}
+
+	};
+
+	template <class T> 
+	class InterfaceTransition: public InterfaceCommand<T>
+	{
+		DECLARE_TYPEDEFS(T);
+
+		InterfaceTransition(testInterfaceFunc test, execInterfaceFunc exec, int command, const std::string &target)
+			: InterfaceCommand(test, exec, command)
+			, TransitionBase(target)
+		{
 		}
 	};
 
@@ -77,6 +126,7 @@ namespace FSM {
 
 		std::map<std::string, State<T>*> states;
 
+	public:
 		void registerState(std::string name, State<T>* state)
 		{
 			states[name] = state;
@@ -89,15 +139,19 @@ namespace FSM {
 			parent->addChild(child);
 		}
 
-		State<T>* getState(std::string name)
+		bool stateExists(const std::string &name)
+		{
+			return getState(name) != NULL;
+		}
+		State<T>* getState(const std::string &name)
 		{
 			return states[name];
 		}
 
-		void setTransition(transitionFunc func, execFunc execFunc, State<T>* _target)
-		{
-			
-		}
+		//void setTransition(transitionFunc func, execFunc execFunc, State<T>* _target)
+		//{
+		//	
+		//}
 	};
 
 
@@ -119,7 +173,7 @@ namespace FSM {
 		onEnterFunc onEnter;
 		onEnterFunc onExit;
 		updateFunc update;
-		std::vector<Transition<T> > transitions;
+		std::vector<TransitionBase* > transitions;
 	public:	
 		State()
 		{
@@ -142,20 +196,20 @@ namespace FSM {
 			update = _update;
 		}
 
-		void registerTransition(transitionFunc transition, State<T>* target)
-		{
-			transitions.push_back( Transition(transition, target) );
-		}
+		//void registerTransition(transitionFunc transition, State<T>* target)
+		//{
+		//	transitions.push_back( Transition(transition, target) );
+		//}
 
-		void registerInterfaceCommand(interfaceFunc func, int command)
-		{
-			transitions.push_back( Transition(func, command, NULL) );
-		}
+		//void registerInterfaceCommand(interfaceFunc func, int command)
+		//{
+		//	transitions.push_back( Transition(func, command, NULL) );
+		//}
 
-		void registerInterfaceTransition(interfaceFunc func, int command, State<T>* target)
-		{
-			transitions.push_back( Transition(func, command, target) );
-		}
+		//void registerInterfaceTransition(interfaceFunc func, int command, State<T>* target)
+		//{
+		//	transitions.push_back( Transition(func, command, target) );
+		//}
 
 		void addChild( State<T>& child )
 		{
