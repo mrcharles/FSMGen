@@ -180,15 +180,18 @@ namespace FSM {
 //this macro uses this-> to enable pretty names for transitions. 
 #define FSM_INIT_TRANSITION( classname, statename, targetname ) \
 	this->##statename##To##targetname.setInstance(this); \
-	this->##statename##To##targetname.init( &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname);
+	this->##statename##To##targetname.init( &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname); \
+	statename.registerTransition(this->##statename##To##targetname);
 
 #define FSM_INIT_INTERFACECOMMAND( classname, statename, command ) \
 	this->##statename##On##command.setInstance(this); \
-	this->##statename##On##command.init( &##classname::test##statename##On##command, &##classname::exec##statename##On##command, command);
+	this->##statename##On##command.init( &##classname::test##statename##On##command, &##classname::exec##statename##On##command, command);\
+	statename.registerTransition(this->##statename##On##command);
 
 #define FSM_INIT_INTERFACETRANSITION( classname, statename, command, targetname ) \
 	this->##statename##To##targetname##On##command.setInstance(this); \
-	this->##statename##To##targetname##On##command.init( &##classname::test##statename##To##targetname##On##command, &##classname::exec##statename##To##targetname##On##command, command, #targetname);
+	this->##statename##To##targetname##On##command.init( &##classname::test##statename##To##targetname##On##command, &##classname::exec##statename##To##targetname##On##command, command, #targetname);\
+	statename.registerTransition(this->##statename##To##targetname##On##command);
 
 
 	template <class T>
@@ -226,20 +229,10 @@ namespace FSM {
 			update = _update;
 		}
 
-		//void registerTransition(transitionFunc transition, State<T>* target)
-		//{
-		//	transitions.push_back( Transition(transition, target) );
-		//}
-
-		//void registerInterfaceCommand(interfaceFunc func, int command)
-		//{
-		//	transitions.push_back( Transition(func, command, NULL) );
-		//}
-
-		//void registerInterfaceTransition(interfaceFunc func, int command, State<T>* target)
-		//{
-		//	transitions.push_back( Transition(func, command, target) );
-		//}
+		void registerTransition( TransitionBase& transition)
+		{
+			transitions.push_back( & transition );
+		}
 
 		void addChild( State<T>& child )
 		{
