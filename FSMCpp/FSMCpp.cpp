@@ -13,7 +13,8 @@ class MyClass
 
 	//declaration
 	FSM::StateMachine<MyClass> FSM;
-
+	void onEnterFSM() {}
+	void onExitFSM() {}
 	
 
 	//State TestA
@@ -67,6 +68,7 @@ public:
 private:
 	void InitializeFSM()
 	{
+		FSM_INIT(MyClass);
 		FSM_INIT_STATE_UPDATE(MyClass, TestA, true);
 		FSM_INIT_STATE(MyClass, SubstateAA, true);
 		FSM_INIT_STATE(MyClass, SubstateAB, false);

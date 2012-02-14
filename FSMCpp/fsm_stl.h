@@ -139,8 +139,15 @@ namespace FSM {
 		DECLARE_TYPEDEFS(T);
 
 		std::map<std::string, State<T>*> states;
-
+		State<T> superState;
+							
 	public:
+		void init( onEnterFunc enter, onExitFunc exit)
+			
+		{
+			superState.init("_super", true, enter, exit);
+		}
+
 		void registerState(std::string name, State<T>* state)
 		{
 			states[name] = state;
@@ -153,6 +160,11 @@ namespace FSM {
 			parent->addChild(child);
 		}
 
+		void addChild(State<T> &state)
+		{
+			superState.addChild(state);s
+		}
+
 		bool stateExists(const std::string &name)
 		{
 			return getState(name) != NULL;
@@ -162,12 +174,12 @@ namespace FSM {
 			return states[name];
 		}
 
-		//void setTransition(transitionFunc func, execFunc execFunc, State<T>* _target)
-		//{
-		//	
-		//}
 	};
 
+
+#define FSM_INIT( classname ) \
+	FSM.setInstance(this); \
+	FSM.init( & ##classname::onEnterFSM, & ##classname::onExitFSM );
 
 #define FSM_INIT_STATE_UPDATE( classname, statename, initial) \
 	statename.setInstance(this);\
