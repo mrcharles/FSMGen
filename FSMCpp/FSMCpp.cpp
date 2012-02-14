@@ -65,6 +65,11 @@ public:
 		InitializeFSM();
 	}
 
+	void update()
+	{
+		FSM.update(0.1f);
+	}
+
 private:
 	void InitializeFSM()
 	{
@@ -80,6 +85,8 @@ private:
 		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
 		FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAB, MyNamedCommand, TestB);
 
+		FSM.addChild(TestA);
+		FSM.addChild(TestB);
 		TestA.addChild(SubstateAA);
 		TestA.addChild(SubstateAB);
 		TestB.addChild(SubstateBA);
@@ -96,6 +103,8 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	MyClass c;
 	//c.InitializeFSM();
+
+	c.update();
 	
 	return 0;
 }

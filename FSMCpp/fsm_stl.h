@@ -162,7 +162,7 @@ namespace FSM {
 
 		void addChild(State<T> &state)
 		{
-			superState.addChild(state);s
+			superState.addChild(state);
 		}
 
 		bool stateExists(const std::string &name)
@@ -172,6 +172,15 @@ namespace FSM {
 		State<T>* getState(const std::string &name)
 		{
 			return states[name];
+		}
+		void update(float dt)
+		{
+			testIntegrity();	
+		}
+
+		void testIntegrity()
+		{
+			states["_super"]->valid();
 		}
 
 	};
@@ -211,21 +220,22 @@ namespace FSM {
 	{
 		DECLARE_TYPEDEFS(T);
 
+		//state static data
 		std::string name;
 		bool initial;
 
-		std::vector<State*> children;
+		std::vector<State<T> *> children;
 		onEnterFunc onEnter;
 		onEnterFunc onExit;
 		updateFunc update;
 		std::vector<TransitionBase* > transitions;
+
+		//state status data
+		bool active;
 	public:	
 		State()
 		{
-			initial = false;
-			onEnter = NULL;
-			onExit = NULL;
-			update = NULL;
+			init("", false, NULL, NULL);
 		}
 		State(std::string _name, bool _initial, onEnterFunc _onEnter, onExitFunc _onExit, updateFunc _update = NULL) 
 		{
@@ -239,6 +249,7 @@ namespace FSM {
 			onEnter = _onEnter;
 			onExit = _onExit;
 			update = _update;
+			active = false;
 		}
 
 		void registerTransition( TransitionBase& transition)
@@ -250,6 +261,29 @@ namespace FSM {
 		{
 			children.push_back(& child);
 		}
+
+		bool valid()
+		{
+			//first test: make we have one and only one initial state
+			if(children.size() > 0)
+			{
+				bool bFoundInitial = false;
+
+				for( std::vector<State<T> *>::const_iterator it = children.begin(); it != children.end(); ++it)
+				{
+					State<T> *state = *it;
+
+					if(bFoundInitial && state->initial)
+					{
+						//FSMError( std::string("state ") << name << "has more than one initial state." );
+						return false;
+					}
+
+				}
+			}
+		}
+
+
 
 	};
 }
