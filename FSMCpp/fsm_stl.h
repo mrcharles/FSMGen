@@ -182,6 +182,9 @@ namespace FSM {
 	this->##statename##To##targetname.setInstance(this); \
 	this->##statename##To##targetname.init( &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname);
 
+#define FSM_INIT_INTERFACECOMMAND( classname, statename, command ) \
+	this->##statename##On##command.setInstance(this); \
+	this->##statename##On##command.init( &##classname::test##statename##On##command, &##classname::exec##statename##On##command, command);
 
 	template <class T>
 	class State

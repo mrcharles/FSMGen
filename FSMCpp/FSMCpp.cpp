@@ -20,8 +20,8 @@ class MyClass
 	void onEnterTestA(){}
 	void onExitTestA(){}
 	void updateTestA(float dt){}
-	FSM::InterfaceResult::Enum testTestAOnMyNamedCommand(){}
-	void execTestAOnMyNamedCommand(){}
+	FSM::InterfaceResult::Enum testTestAOnMyNamedCommand(FSM::InterfaceParam* param){ return FSM::InterfaceResult::Unhandled;}
+	void execTestAOnMyNamedCommand(FSM::InterfaceParam* param){}
 
 	//State SubstateAA
 	void onEnterSubstateAA(){}
@@ -74,6 +74,7 @@ private:
 		FSM_INIT_STATE(MyClass, SubstateBA, false);
 		FSM_INIT_STATE(MyClass, SubstateBB, false);
 		
+		FSM_INIT_INTERFACECOMMAND(MyClass, TestA, MyNamedCommand);
 		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
 
 		TestA.addChild(SubstateAA);
