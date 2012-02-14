@@ -177,6 +177,12 @@ namespace FSM {
 	statename.setInstance(this);\
 	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename);
 
+//this macro uses this-> to enable pretty names for transitions. 
+#define FSM_INIT_TRANSITION( classname, statename, targetname ) \
+	this->##statename##To##targetname.setInstance(this); \
+	this->##statename##To##targetname.init( &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname);
+
+
 	template <class T>
 	class State
 	{

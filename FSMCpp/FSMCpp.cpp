@@ -26,7 +26,7 @@ class MyClass
 	//State SubstateAA
 	void onEnterSubstateAA(){}
 	void onExitSubstateAA(){}
-	bool testSubstateAAToSubstateAB(){}
+	bool testSubstateAAToSubstateAB(){ return false;}
 	void execSubstateAAToSubstateAB(){}
 	FSM::InterfaceResult::Enum testSubstateAAToTestBOnMyNamedCommand(){}
 	void execSubstateAAToTestBOnMyNamedCommand(){}
@@ -49,10 +49,10 @@ class MyClass
 
 
 	FSM::State<MyClass> TestA;
-	//FSM::InterfaceCommand<MyClass> TestAOnMyNamedCommand;
+	FSM::InterfaceCommand<MyClass> TestAOnMyNamedCommand;
 	FSM::State<MyClass> SubstateAA;
 	FSM::Transition<MyClass> SubstateAAToSubstateAB;
-	//FSM::InterfaceTransition<MyClass> SubstateABToTestB;
+	FSM::InterfaceTransition<MyClass> SubstateABToTestB;
 	FSM::State<MyClass> SubstateAB;
 	FSM::State<MyClass> TestB;
 	FSM::State<MyClass> SubstateBA;
@@ -74,6 +74,7 @@ private:
 		FSM_INIT_STATE(MyClass, SubstateBA, false);
 		FSM_INIT_STATE(MyClass, SubstateBB, false);
 		
+		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
 
 		TestA.addChild(SubstateAA);
 		TestA.addChild(SubstateAB);
