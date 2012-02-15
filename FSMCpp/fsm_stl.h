@@ -215,6 +215,8 @@ namespace FSM {
 	statename.registerTransition(this->##statename##To##targetname##On##command);
 
 
+	void FSMError(const std::string &text);
+
 	template <class T>
 	class State
 	{
@@ -275,10 +277,21 @@ namespace FSM {
 
 					if(bFoundInitial && state->initial)
 					{
-						//FSMError( std::string("state ") << name << "has more than one initial state." );
+						FSMError( "state " + name + " has more than one initial state." );
 						return false;
 					}
+					else if(state->initial)
+					{
+						bFoundInitial = true;
+					}
 
+				}
+
+				//might want to remove this for dynamic setting of initial state. 
+				if(!bFoundInitial)
+				{
+					FSMError( "state " + name + " does not have an initial state.");
+					return false;
 				}
 			}
 		}
