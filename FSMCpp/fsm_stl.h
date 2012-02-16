@@ -40,7 +40,7 @@ namespace FSM {
 		void setInstance( T* instance ) \
 			{ _instance = instance; } 	
 	
-
+		
 	class TransitionBase
 	{
 		std::string target;
@@ -111,7 +111,11 @@ namespace FSM {
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param)
 		{
-			return  (_instance->*fTestInterface)(param);
+			//implicitly we return unhandled if there's no param. facilitates
+			//grouping all transition types together. 
+			if(param)
+				return  (_instance->*fTestInterface)(param);
+			return InterfaceResult::Unhandled;
 		}
 		virtual void exec(InterfaceParam* param )
 		{
@@ -176,7 +180,6 @@ namespace FSM {
 	protected:
 		//state static data
 		std::string name;
-		bool initial;
 
 	private:
 		std::vector<State<T> *> children;
@@ -189,6 +192,7 @@ namespace FSM {
 	public:
 		//state status data
 		bool active;
+		bool initial;
 		std::vector<TransitionBase*>& getTransitions()
 		{
 			return transitions;
@@ -258,6 +262,10 @@ namespace FSM {
 
 		State<T>* getInitialChild()
 		{
+			//if there's only one child it is implicitly initial. 
+			if( children.size() == 1)
+				return children[0];
+
 			if( children.size() > 0)
 			{
 				for( std::vector<State<T>*>::const_iterator it = children.begin(); it != children.end(); ++it )
@@ -343,6 +351,12 @@ namespace FSM {
 		{
 			State::init("_super", true, enter, exit);
 			activeState = NULL;
+		}
+
+		void status()
+		{
+			printf("Current State is %s.\n", activeState->getName().c_str());
+
 		}
 
 		void registerState(State<T>& state)
@@ -431,10 +445,12 @@ namespace FSM {
 			while( parentA == parentB && parentA != NULL && parentB != NULL )
 			{
 				common = parentA;
-				parentA = parentsA.top();
-				parentB = parentsB.top();
 				parentsA.pop();
 				parentsB.pop();
+				if(parentsA.size() == 0 || parentsB.size() == 0)
+					break;
+				parentA = parentsA.top();
+				parentB = parentsB.top();
 			}
 
 			return common;

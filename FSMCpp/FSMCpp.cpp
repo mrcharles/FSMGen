@@ -27,7 +27,7 @@ class MyClass
 	//State SubstateAA
 	void onEnterSubstateAA(){}
 	void onExitSubstateAA(){}
-	bool testSubstateAAToSubstateAB(){ return false;}
+	bool testSubstateAAToSubstateAB(){ return true;}
 	void execSubstateAAToSubstateAB(){}
 	FSM::InterfaceResult::Enum testSubstateABToTestBOnMyNamedCommand(FSM::InterfaceParam* param){return FSM::InterfaceResult::Unhandled;}
 	void execSubstateABToTestBOnMyNamedCommand(FSM::InterfaceParam* param){}
@@ -35,9 +35,14 @@ class MyClass
 	//State SubstateAB
 	void onEnterSubstateAB(){}
 	void onExitSubstateAB(){}
+	bool testSubstateABToTestB(){ return true;}
+	void execSubstateABToTestB(){}
 
 	//State TestB
-	void onEnterTestB(){}
+	void onEnterTestB()
+	{
+		//SubstateBB.initial = true;
+	}
 	void onExitTestB(){}
 
 	//State SubstateBA
@@ -55,8 +60,9 @@ class MyClass
 	FSM::Transition<MyClass> SubstateAAToSubstateAB;
 	FSM::InterfaceTransition<MyClass> SubstateABToTestBOnMyNamedCommand;
 	FSM::State<MyClass> SubstateAB;
+	FSM::Transition<MyClass> SubstateABToTestB;
 	FSM::State<MyClass> TestB;
-	FSM::State<MyClass> SubstateBA;
+	//FSM::State<MyClass> SubstateBA;
 	FSM::State<MyClass> SubstateBB;
 
 public:
@@ -73,6 +79,11 @@ public:
 		FSM.update(0.1f);
 	}
 
+	void status()
+	{
+		FSM.status();
+	}
+
 private:
 	void InitializeFSM()
 	{
@@ -81,21 +92,20 @@ private:
 		FSM_INIT_STATE(MyClass, SubstateAA, true);
 		FSM_INIT_STATE(MyClass, SubstateAB, false);
 		FSM_INIT_STATE(MyClass, TestB, false);
-		FSM_INIT_STATE(MyClass, SubstateBA, false);
+		//FSM_INIT_STATE(MyClass, SubstateBA, false);
 		FSM_INIT_STATE(MyClass, SubstateBB, false);
 		
 		FSM_INIT_INTERFACECOMMAND(MyClass, TestA, MyNamedCommand);
 		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
 		FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAB, MyNamedCommand, TestB);
+		FSM_INIT_TRANSITION(MyClass, SubstateAB, TestB);
 
 		FSM.addChild(TestA);
 		FSM.addChild(TestB);
 		TestA.addChild(SubstateAA);
 		TestA.addChild(SubstateAB);
-		TestB.addChild(SubstateBA);
+		//TestB.addChild(SubstateBA);
 		TestB.addChild(SubstateBB);
-
-		//SubstateAA.registerTransition(
 		
 	}
 };
@@ -109,6 +119,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 	c.update();
+	c.status();
+
+	c.update();
+	c.status();
 	
 	return 0;
 }
