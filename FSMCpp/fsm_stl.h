@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <stack>
 
 namespace FSM {
 
@@ -26,14 +27,14 @@ namespace FSM {
 	class State;
 
 #define DECLARE_TYPEDEFS(T) \
-   		typedef void(T::*onEnterFunc)(); \
+	protected: \
+		typedef void(T::*onEnterFunc)(); \
 		typedef void(T::*onExitFunc)();	  \
 		typedef void(T::*updateFunc)(float dt);	\
 		typedef bool(T::*testFunc)();		 \
 		typedef InterfaceResult::Enum (T::*testInterfaceFunc)( InterfaceParam* param );	\
 		typedef void(T::*execInterfaceFunc)( InterfaceParam* param );				 \
 		typedef void(T::*execFunc)();  \
-	protected: \
 		T *_instance; \
 	public: \
 		void setInstance( T* instance ) \
@@ -133,60 +134,7 @@ namespace FSM {
 
 	};
 
-	template <class T>
-	class StateMachine
-	{
-		DECLARE_TYPEDEFS(T);
-
-		std::map<std::string, State<T>*> states;
-		State<T> superState;
-							
-	public:
-		void init( onEnterFunc enter, onExitFunc exit)
-			
-		{
-			superState.init("_super", true, enter, exit);
-		}
-
-		void registerState(std::string name, State<T>* state)
-		{
-			states[name] = state;
-		}
-
-		void setChild(std::string _parent, std::string _child)
-		{
-			State<T>* parent = states[_parent];
-			State<T>* child = states[_child];
-			parent->addChild(child);
-		}
-
-		void addChild(State<T> &state)
-		{
-			superState.addChild(state);
-		}
-
-		bool stateExists(const std::string &name)
-		{
-			return getState(name) != NULL;
-		}
-		State<T>* getState(const std::string &name)
-		{
-			return states[name];
-		}
-		void update(float dt)
-		{
-			testIntegrity();	
-		}
-
-		void testIntegrity()
-		{
-			states["_super"]->valid();
-		}
-
-	};
-
-
-#define FSM_INIT( classname ) \
+	#define FSM_INIT( classname ) \
 	FSM.setInstance(this); \
 	FSM.init( & ##classname::onEnterFSM, & ##classname::onExitFSM );
 
@@ -216,24 +164,33 @@ namespace FSM {
 
 
 	void FSMError(const std::string &text);
+	void FSMAssert(bool mustBeTrue, const std::string &error);
 
 	template <class T>
 	class State
 	{
 		DECLARE_TYPEDEFS(T);
 
+	protected:
 		//state static data
 		std::string name;
 		bool initial;
 
+	private:
 		std::vector<State<T> *> children;
+		State<T>* parent;
 		onEnterFunc onEnter;
 		onEnterFunc onExit;
-		updateFunc update;
+		updateFunc onUpdate;
 		std::vector<TransitionBase* > transitions;
 
+	public:
 		//state status data
 		bool active;
+		std::vector<TransitionBase*>& getTransitions()
+		{
+			return transitions;
+		}
 	public:	
 		State()
 		{
@@ -250,7 +207,7 @@ namespace FSM {
 			initial = _initial;
 			onEnter = _onEnter;
 			onExit = _onExit;
-			update = _update;
+			onUpdate = _update;
 			active = false;
 		}
 
@@ -261,7 +218,71 @@ namespace FSM {
 
 		void addChild( State<T>& child )
 		{
+			child.parent = this;
 			children.push_back(& child);
+		}
+
+		State<T>* getParent()
+		{
+			return parent;
+		}
+
+		void getParents(std::stack< State<T>* > &parents)
+		{
+			State<T> *state = parent;
+
+			while(state != NULL)
+			{
+				parents.push(state);
+				state = state->parent;
+			}
+		}
+
+		State<T>* getActiveChild()
+		{
+			for( std::vector<State<T>*>::const_iterator it = children.begin(); it != children.end(); ++it )
+			{
+				State<T>* state = *it;
+				if(state->active)
+					return state;
+			}
+			return NULL;
+		}
+
+		State<T>* getInitialChild()
+		{
+			if( children.size() > 0)
+			{
+				for( std::vector<State<T>*>::const_iterator it = children.begin(); it != children.end(); ++it )
+				{
+					State<T>* state = *it;
+					if(state->initial)
+						return state;
+				}
+				FSMAssert(false, "State " + name + "does not have any children marked initial.");
+			}
+
+			return NULL;
+		}
+		
+		void update(float dt)
+		{
+			if(onUpdate)
+				(_instance->*onUpdate)(dt);
+		}
+
+		void exit()
+		{
+			if(onExit)
+				(_instance->*onExit)();
+			active = false;
+		}
+
+		void enter()
+		{
+			if(onEnter)
+				(_instance->*onEnter)();
+			active = true;
 		}
 
 		bool valid()
@@ -294,11 +315,169 @@ namespace FSM {
 					return false;
 				}
 			}
+			return true;
 		}
 
 
 
 	};
+
+   template <class T>
+	class StateMachine : public State<T>
+	{
+		//DECLARE_TYPEDEFS(T);
+
+		std::map<std::string, State<T>*> states;
+		State<T>* activeState;
+							
+	public:
+		void init( onEnterFunc enter, onExitFunc exit)
+			
+		{
+			State::init("_super", true, enter, exit);
+			activeState = NULL;
+		}
+
+		void registerState(std::string name, State<T>* state)
+		{
+			states[name] = state;
+		}
+
+		void setChild(std::string _parent, std::string _child)
+		{
+			State<T>* parent = states[_parent];
+			State<T>* child = states[_child];
+			parent->addChild(child);
+		}
+
+		bool stateExists(const std::string &name)
+		{
+			return getState(name) != NULL;
+		}
+
+		State<T>* getState(const std::string &name)
+		{
+			return states[name];
+		}
+
+		void update(float dt)
+		{
+			testIntegrity();
+
+			//update each active state. 
+			//right now, states update from top down
+			State<T> *state = getActiveChild();
+			State<T> *leafmost = NULL;
+			while( state != NULL )
+			{
+				state->update(dt);
+				leafmost = state;
+				state = state->getActiveChild();
+			}
+
+			state = leafmost;
+			//test transitions from leafmost updwards
+			while( state != NULL )
+			{
+				std::vector<TransitionBase* > &transitions = state->getTransitions();
+
+				for(std::vector<TransitionBase*>::const_iterator it = transitions.begin(); it != transitions.end(); ++it)
+				{
+					TransitionBase* trans = *it;
+
+					if(trans->test())
+					{
+						ChangeState(trans->getTarget());
+					}
+				}
+
+			}
+
+
+		}
+
+		State<T>* getCommonParent(State<T>* stateA, State<T>* stateB)
+		{
+		   std::stack< State<T>* > parentsA;
+		   std::stack< State<T>* > parentsB;
+
+		   stateA->getParents(parentsA);
+		   stateB->getParents(parentsB);
+
+		   return getCommonParent(parentsA, parentsB);
+		}
+
+		State<T>* getCommonParent(std::stack< State<T>* > &parentsA, std::stack< State<T>* > &parentsB)
+		{
+			State<T> * parentA = parentsA.top();
+			State<T> * parentB = parentsB.top();
+
+			State<T> * common = NULL;
+
+			while( parentA == parentB && parentA != NULL && parentB != NULL )
+			{
+				common = parentA;
+				parentA = parentsA.top();
+				parentB = parentsB.top();
+				parentsA.pop();
+				parentsB.pop();
+			}
+
+			return common;
+		
+		}
+
+		void ChangeState(const std::string& name)
+		{
+			State<T> *targetState = getState(name);
+			FSMAssert(targetState != NULL, "target state for state change not found.");
+			std::stack< State<T>* > activeParents;
+			std::stack< State<T>* > targetParents;
+
+			activeState->getParents(activeParents);
+			targetState->getParents(targetParents);
+		  
+		    State<T> *root = getCommonParent(activeParents, targetParents);
+
+			//send exits, active state up to parents
+			State<T> *exitState = activeState;
+			while( exitState != NULL && exitState != root )
+			{
+				exitState->exit();
+				exitState = exitState->getParent();
+			}
+
+			//now we have to activate our new state, and go down the chain 
+			//activating initial state until we get to the leafmost
+			FSMAssert( targetState->getParent() == root, "target state must be a sibling of a state in active state's parent tree. FSM now broken.");
+
+			ActivateState(targetState);
+
+
+		}
+
+		void ActivateState(State<T>* state)
+		{
+			State<T> *enterState = state;
+			while(enterState != NULL)
+			{
+				FSMAssert(!enterState->active, "Trying to activate an already active state.");
+				enterState->enter();
+				activeState = enterState;
+				enterState = enterState->getInitialChild();
+			}
+		}
+
+		void testIntegrity()
+		{
+			if(activeState)
+				activeState->valid();
+		}
+
+	};
+
+
+
 }
 
 #endif
