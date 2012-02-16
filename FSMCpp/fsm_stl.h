@@ -134,17 +134,19 @@ namespace FSM {
 
 	};
 
-	#define FSM_INIT( classname ) \
+#define FSM_INIT( classname ) \
 	FSM.setInstance(this); \
 	FSM.init( & ##classname::onEnterFSM, & ##classname::onExitFSM );
 
 #define FSM_INIT_STATE_UPDATE( classname, statename, initial) \
 	statename.setInstance(this);\
-	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename);
+	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename); \
+	FSM.registerState(statename);
 
 #define FSM_INIT_STATE( classname, statename, initial) \
 	statename.setInstance(this);\
-	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename);
+	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename);\
+	FSM.registerState(statename);
 
 //this macro uses this-> to enable pretty names for transitions. 
 #define FSM_INIT_TRANSITION( classname, statename, targetname ) \
@@ -191,6 +193,10 @@ namespace FSM {
 		{
 			return transitions;
 		}
+		const std::string& getName() const
+		{
+			return name;
+		}
 	public:	
 		State()
 		{
@@ -209,6 +215,7 @@ namespace FSM {
 			onExit = _onExit;
 			onUpdate = _update;
 			active = false;
+			parent = NULL;
 		}
 
 		void registerTransition( TransitionBase& transition)
@@ -338,9 +345,9 @@ namespace FSM {
 			activeState = NULL;
 		}
 
-		void registerState(std::string name, State<T>* state)
+		void registerState(State<T>& state)
 		{
-			states[name] = state;
+			states[state.getName()] = &state;
 		}
 
 		void setChild(std::string _parent, std::string _child)
@@ -358,6 +365,11 @@ namespace FSM {
 		State<T>* getState(const std::string &name)
 		{
 			return states[name];
+		}
+
+		void activate()
+		{
+			activateState(this);
 		}
 
 		void update(float dt)
@@ -385,12 +397,14 @@ namespace FSM {
 				{
 					TransitionBase* trans = *it;
 
-					if(trans->test())
+					if(trans->test() == InterfaceResult::Success)
 					{
-						ChangeState(trans->getTarget());
+						changeState(trans->getTarget());
+						return;
 					}
 				}
 
+				state = state->getParent();
 			}
 
 
@@ -427,7 +441,7 @@ namespace FSM {
 		
 		}
 
-		void ChangeState(const std::string& name)
+		void changeState(const std::string& name)
 		{
 			State<T> *targetState = getState(name);
 			FSMAssert(targetState != NULL, "target state for state change not found.");
@@ -451,12 +465,12 @@ namespace FSM {
 			//activating initial state until we get to the leafmost
 			FSMAssert( targetState->getParent() == root, "target state must be a sibling of a state in active state's parent tree. FSM now broken.");
 
-			ActivateState(targetState);
+			activateState(targetState);
 
 
 		}
 
-		void ActivateState(State<T>* state)
+		void activateState(State<T>* state)
 		{
 			State<T> *enterState = state;
 			while(enterState != NULL)

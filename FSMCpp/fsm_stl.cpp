@@ -13,7 +13,8 @@ void FSMError(const std::string &text)
 
 void FSMAssert(bool mustBeTrue, const std::string &error)
 {
-	printf(error.c_str());
+	if(!mustBeTrue) 
+		printf(error.c_str());
 	assert(mustBeTrue);
 }
 

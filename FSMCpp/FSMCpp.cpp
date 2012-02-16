@@ -63,7 +63,10 @@ public:
 	MyClass()
 	{
 		InitializeFSM();
+		FSM.activate();
 	}
+
+
 
 	void update()
 	{
@@ -103,6 +106,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	MyClass c;
 	//c.InitializeFSM();
+
 
 	c.update();
 	
