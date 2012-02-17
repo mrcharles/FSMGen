@@ -8,6 +8,9 @@
 
 namespace FSM {
 
+	void FSMError(const std::string &text);
+	void FSMAssert(bool mustBeTrue, const std::string &error);
+
 	namespace InterfaceResult
 	{
 		enum Enum 
@@ -184,9 +187,6 @@ namespace FSM {
 	statename.registerTransition(this->##statename##To##targetname##On##command);
 
 
-	void FSMError(const std::string &text);
-	void FSMAssert(bool mustBeTrue, const std::string &error);
-
 	template <class T>
 	class State
 	{
@@ -208,14 +208,6 @@ namespace FSM {
 		//state status data
 		bool active;
 		bool initial;
-		std::vector<TransitionBase*>& getTransitions()
-		{
-			return transitions;
-		}
-		const std::string& getName() const
-		{
-			return name;
-		}
 	public:	
 		State()
 		{
@@ -237,31 +229,25 @@ namespace FSM {
 			parent = NULL;
 		}
 
+		const std::string& getName() const
+		{
+			return name;
+		}
+
 		void registerTransition( TransitionBase& transition)
 		{
 			transitions.push_back( & transition );
+		}
+
+		std::vector<TransitionBase*>& getTransitions()
+		{
+			return transitions;
 		}
 
 		void addChild( State<T>& child )
 		{
 			child.parent = this;
 			children.push_back(& child);
-		}
-
-		State<T>* getParent()
-		{
-			return parent;
-		}
-
-		void getParents(std::stack< State<T>* > &parents)
-		{
-			State<T> *state = parent;
-
-			while(state != NULL)
-			{
-				parents.push(state);
-				state = state->parent;
-			}
 		}
 
 		State<T>* getActiveChild()
@@ -295,6 +281,22 @@ namespace FSM {
 			return NULL;
 		}
 		
+		State<T>* getParent()
+		{
+			return parent;
+		}
+
+		void getParents(std::stack< State<T>* > &parents)
+		{
+			State<T> *state = parent;
+
+			while(state != NULL)
+			{
+				parents.push(state);
+				state = state->parent;
+			}
+		}
+
 		void update(float dt)
 		{
 			if(onUpdate)
@@ -423,13 +425,6 @@ namespace FSM {
 			states[state.getName()] = &state;
 		}
 
-		void setChild(std::string _parent, std::string _child)
-		{
-			State<T>* parent = states[_parent];
-			State<T>* child = states[_child];
-			parent->addChild(child);
-		}
-
 		bool stateExists(const std::string &name)
 		{
 			return getState(name) != NULL;
@@ -482,6 +477,14 @@ namespace FSM {
 
 
 		}
+
+		void testIntegrity()
+		{
+			if(activeState)
+				activeState->valid();
+		}
+
+	protected:
 
 		State<T>* getCommonParent(State<T>* stateA, State<T>* stateB)
 		{
@@ -555,12 +558,6 @@ namespace FSM {
 				activeState = enterState;
 				enterState = enterState->getInitialChild();
 			}
-		}
-
-		void testIntegrity()
-		{
-			if(activeState)
-				activeState->valid();
 		}
 
 	};
