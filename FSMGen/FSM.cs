@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace FSMGen
 {
@@ -20,6 +21,82 @@ namespace FSMGen
 
 	}
 
+	abstract class FSMVisitor
+	{
+		protected StreamWriter stream;
+		public string ClassName = null;
+		public FSMVisitor(StreamWriter _stream)
+		{
+			stream = _stream;
+		}
+		public abstract void Init();
+		public virtual bool Valid(Statement s)
+		{
+			if (s is ClassStatement)
+			{
+				return true;
+			}
+			return false;
+		}
+
+		public virtual void Visit(Statement s)
+		{ 
+			if( s is ClassStatement )
+			{
+				ClassName = (s as ClassStatement).name;
+			}
+		}
+		public abstract void End();
+	}
+
+	class CommandsVisitor: FSMVisitor
+	{
+		int commandIndex = 0;
+		public CommandsVisitor(StreamWriter _stream)
+			:base(_stream)
+			{}
+		public override void Init()
+		{
+			stream.WriteLine("enum InterfaceCommands");
+			stream.WriteLine("{");
+		}
+
+		public override bool Valid(Statement s)
+		{
+			if (s is InterfaceCommandStatement)
+			{
+				return true;
+			}
+
+			return base.Valid(s);
+		}
+
+		public override void Visit(Statement s)
+		{
+			if (s is InterfaceCommandStatement)
+			{
+				if (ClassName == null)
+					throw new MalformedFSMException("Encountered interfacecommand directive before class directive.");
+
+				InterfaceCommandStatement command = s as InterfaceCommandStatement;
+				
+				stream.WriteLine("\t" + command.name + " = " + commandIndex + ",");
+				commandIndex++;
+			}
+			else
+			{
+				base.Visit(s);
+			}
+		}
+
+		public override void End()
+		{
+			stream.WriteLine("};");
+			stream.WriteLine();
+			stream.WriteLine();
+		}
+	}
+
 	abstract class Statement
 	{
 		public FSM owner;
@@ -28,6 +105,21 @@ namespace FSMGen
 		public virtual bool ShouldPush() { return false; }
 		public virtual bool ShouldPop() { return false; }
 		public virtual List<Statement> Statements() { return null; }
+
+		public void AcceptVisitor(FSMVisitor visitor)
+		{
+			if (visitor.Valid(this))
+			{
+				visitor.Visit(this);
+			}
+			if (Statements() != null)
+			{
+				foreach (Statement s in Statements())
+				{
+					s.AcceptVisitor(visitor);
+				}
+			}
+		}
 
 	}
 
@@ -224,7 +316,16 @@ namespace FSMGen
 
 			}
 
-			
+		}
+		
+		public void Export(StreamWriter stream)
+		{ 
+			CommandsVisitor commands = new CommandsVisitor(stream);
+
+			commands.Init();
+			lastpopped.AcceptVisitor(commands);
+			commands.End();
 		}
 	}
+
 }
