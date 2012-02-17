@@ -28,6 +28,9 @@
     <ClInclude Include="fsm_stl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MyClass_fsm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
