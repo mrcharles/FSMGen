@@ -1,0 +1,6 @@
+enum InterfaceCommands
+{
+	MyNamedCommand = 0,
+};
+
+
