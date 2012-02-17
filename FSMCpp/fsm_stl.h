@@ -54,6 +54,7 @@ namespace FSM {
 		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL) = 0;
 		virtual void exec(InterfaceParam* param = NULL) = 0;
 		const std::string& getTarget() const { return target; }
+		virtual int getCommand() { return -1; }
 	};
 
 	template <class T>
@@ -78,10 +79,14 @@ namespace FSM {
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL)
 		{
-			if( (_instance->*fTest)() )
-				return InterfaceResult::Success;
+			if(param == NULL)
+			{
+				if( (_instance->*fTest)() )
+					return InterfaceResult::Success;
 
-			return InterfaceResult::Failed;
+				return InterfaceResult::Failed;
+			}
+			return InterfaceResult::Unhandled;
 		}
 		virtual void exec(InterfaceParam* param = NULL)
 		{
@@ -107,6 +112,11 @@ namespace FSM {
 			fExecInterface = exec;
 			interfaceCommand = command;
 			TransitionBase::init("");
+		}
+
+		virtual int getCommand()
+		{
+			return interfaceCommand;
 		}
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param)
@@ -137,6 +147,11 @@ namespace FSM {
 		}
 
 	};
+
+#define FSM_DECLARE( classname ) \
+	FSM::StateMachine<classname> FSM; \
+	void onEnterFSM(); \
+	void onExitFSM();
 
 #define FSM_INIT( classname ) \
 	FSM.setInstance(this); \
@@ -344,6 +359,7 @@ namespace FSM {
 
 		std::map<std::string, State<T>*> states;
 		State<T>* activeState;
+		TransitionBase* testedTransition;
 							
 	public:
 		void init( onEnterFunc enter, onExitFunc exit)
@@ -357,6 +373,49 @@ namespace FSM {
 		{
 			printf("Current State is %s.\n", activeState->getName().c_str());
 
+		}
+
+		bool testCommand(int command, FSM::InterfaceParam *param)
+		{
+			FSMAssert(command >= 0, "interface commands must be greater than zero");
+
+			//run the test from leafmost up
+			State<T> *state = activeState;
+
+			while(state != NULL)
+			{
+				std::vector<TransitionBase*> transitions = state->getTransitions();
+				for( std::vector<TransitionBase*>::const_iterator it = transitions.begin();
+					 it != transitions.end();
+					 ++it )
+				{
+					TransitionBase * trans = *it;
+					if( trans->getCommand() == command)
+					{
+						InterfaceResult::Enum result = trans->test(param);
+						if(result == InterfaceResult::Failed)
+							return false;
+						if(result == InterfaceResult::Success)
+						{
+							testedTransition = trans;
+							return true;
+						}
+					}
+				}
+				state = state->getParent();
+
+			}
+			return false;
+		}
+
+		void execCommand(int command, FSM::InterfaceParam *param)
+		{
+			FSMAssert( testedTransition != NULL && testedTransition->getCommand() == command, "Attempting to execute a transition which was not tested.");
+			testedTransition->exec(param);
+			const std::string& target = testedTransition->getTarget();
+			if(target != "") //this will be "" in the case where we are running a command. 
+				changeState(testedTransition->getTarget());
+			testedTransition = NULL;
 		}
 
 		void registerState(State<T>& state)

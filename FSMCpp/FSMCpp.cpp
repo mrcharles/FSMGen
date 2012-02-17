@@ -6,6 +6,7 @@
 
 class MyClass
 {
+public:
 	enum InterfaceCommands
 	{
 		MyNamedCommand = 0
@@ -13,6 +14,7 @@ class MyClass
 
 	//declaration
 	FSM::StateMachine<MyClass> FSM;
+private:
 	void onEnterFSM() {}
 	void onExitFSM() {}
 	
@@ -21,16 +23,19 @@ class MyClass
 	void onEnterTestA(){}
 	void onExitTestA(){}
 	void updateTestA(float dt){}
-	FSM::InterfaceResult::Enum testTestAOnMyNamedCommand(FSM::InterfaceParam* param){ return FSM::InterfaceResult::Unhandled;}
-	void execTestAOnMyNamedCommand(FSM::InterfaceParam* param){}
+	FSM::InterfaceResult::Enum testTestAOnMyNamedCommand(FSM::InterfaceParam* param){ return FSM::InterfaceResult::Success;}
+	void execTestAOnMyNamedCommand(FSM::InterfaceParam* param)
+	{
+		printf("mynamedcommand recieved by testA\n");
+	}
 
 	//State SubstateAA
 	void onEnterSubstateAA(){}
 	void onExitSubstateAA(){}
-	bool testSubstateAAToSubstateAB(){ return true;}
+	bool testSubstateAAToSubstateAB(){ return false;}
 	void execSubstateAAToSubstateAB(){}
-	FSM::InterfaceResult::Enum testSubstateABToTestBOnMyNamedCommand(FSM::InterfaceParam* param){return FSM::InterfaceResult::Unhandled;}
-	void execSubstateABToTestBOnMyNamedCommand(FSM::InterfaceParam* param){}
+	FSM::InterfaceResult::Enum testSubstateAAToTestBOnMyNamedCommand(FSM::InterfaceParam* param){return FSM::InterfaceResult::Success;}
+	void execSubstateAAToTestBOnMyNamedCommand(FSM::InterfaceParam* param){}
 
 	//State SubstateAB
 	void onEnterSubstateAB(){}
@@ -58,7 +63,7 @@ class MyClass
 	FSM::InterfaceCommand<MyClass> TestAOnMyNamedCommand;
 	FSM::State<MyClass> SubstateAA;
 	FSM::Transition<MyClass> SubstateAAToSubstateAB;
-	FSM::InterfaceTransition<MyClass> SubstateABToTestBOnMyNamedCommand;
+	FSM::InterfaceTransition<MyClass> SubstateAAToTestBOnMyNamedCommand;
 	FSM::State<MyClass> SubstateAB;
 	FSM::Transition<MyClass> SubstateABToTestB;
 	FSM::State<MyClass> TestB;
@@ -97,7 +102,7 @@ private:
 		
 		FSM_INIT_INTERFACECOMMAND(MyClass, TestA, MyNamedCommand);
 		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
-		FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAB, MyNamedCommand, TestB);
+		FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAA, MyNamedCommand, TestB);
 		FSM_INIT_TRANSITION(MyClass, SubstateAB, TestB);
 
 		FSM.addChild(TestA);
@@ -120,6 +125,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	c.update();
 	c.status();
+
+	FSM::InterfaceParam param;
+	if(c.FSM.testCommand(MyClass::MyNamedCommand, &param))
+		c.FSM.execCommand(MyClass::MyNamedCommand, &param);
+
 
 	c.update();
 	c.status();
