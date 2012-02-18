@@ -110,6 +110,7 @@ namespace FSMGen
 			stream.WriteLine("\tFSM::StateMachine<MyClass> FSM;");
 			stream.WriteLine("\tvoid onEnterFSM();");
 			stream.WriteLine("\tvoid onExitFSM();");
+			stream.WriteLine();
 		}
 
 		public override bool Valid(Statement s)
@@ -140,7 +141,7 @@ namespace FSMGen
 				stream.WriteLine("\tFSM::State<" + ClassName + "> " + state.name + ";");
 				stream.WriteLine("\tvoid onEnter" + state.name + "();");
 				stream.WriteLine("\tvoid onExit" + state.name + "();");
-				if (state.HasStatement(typeof(InitialStatement)))
+				if (state.HasStatement(typeof(UpdateStatement)))
 				{
 					stream.WriteLine("\tvoid onUpdate" + state.name + "(float dt);");
 				}

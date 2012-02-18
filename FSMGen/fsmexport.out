@@ -21,7 +21,6 @@ enum InterfaceCommands
 	FSM::State<MyClass> SubstateAA;
 	void onEnterSubstateAA();
 	void onExitSubstateAA();
-	void onUpdateSubstateAA(float dt);
 
 	FSM::Transition<MyClass> SubstateAAToSubstateAB;
 	bool testSubstateAAToSubstateAB();
