@@ -2,6 +2,7 @@ startfsm
 
 class MyClass
 interfacecommand MyNamedCommand
+interfacecommand TestCommand
 
 state TestA
 	initial
@@ -16,6 +17,8 @@ state TestA
 		transition TestB
 	endstate
 endstate
+
+interfacecommand ThisIsInAWeirdPlace
 
 state TestB
 	state SubstateBA

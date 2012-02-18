@@ -97,6 +97,113 @@ namespace FSMGen
 		}
 	}
 
+	class DeclarationVisitor : FSMVisitor
+	{
+		Stack<string> statenames = new Stack<string>();
+		
+		public DeclarationVisitor(StreamWriter stream)
+			: base(stream)
+		{ }
+
+		public override void Init()
+		{
+			stream.WriteLine("\tFSM::StateMachine<MyClass> FSM;");
+			stream.WriteLine("\tvoid onEnterFSM();");
+			stream.WriteLine("\tvoid onExitFSM();");
+		}
+
+		public override bool Valid(Statement s)
+		{
+			if (s is ClassStatement || s is StateStatement || s is TransitionStatement || s is TestStatement || s is GenericPopStatement)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		public override void Visit(Statement s)
+		{
+			if (s is ClassStatement)
+			{
+				ClassName = (s as ClassStatement).name;
+			}
+			if (ClassName == null)			
+				throw new MalformedFSMException("No class statement found before state implementation.");
+			if (s is StateStatement)
+			{ 
+				StateStatement state = s as StateStatement;
+				statenames.Push(state.name);
+
+				//state statements only have enter/exit/update func declarations
+
+				stream.WriteLine("\tFSM::State<" + ClassName + "> " + state.name + ";");
+				stream.WriteLine("\tvoid onEnter" + state.name + "();");
+				stream.WriteLine("\tvoid onExit" + state.name + "();");
+				if (state.HasStatement(typeof(InitialStatement)))
+				{
+					stream.WriteLine("\tvoid onUpdate" + state.name + "(float dt);");
+				}
+				stream.WriteLine();
+			}
+			if (s is TestStatement)
+			{
+				TestStatement test = s as TestStatement;
+				string state = statenames.Peek();
+				if(state == null)
+					throw new MalformedFSMException("Interface Command found outside of state block");
+
+				string transName = state + "On" + test.name;
+
+				stream.WriteLine("\tFSM::InterfaceCommand<" + ClassName + "> " + transName + ";");
+
+				stream.WriteLine("\tFSM::InterfaceParam::Enum test"+transName+"(FSM::InterfaceParam* param);");
+				stream.WriteLine("\tvoid exec"+transName+"(FSM::InterfaceParam* param);");
+				stream.WriteLine();
+			}
+			if( s is TransitionStatement )
+			{
+				TransitionStatement transition = s as TransitionStatement;
+				string state = statenames.Peek();
+				if(state == null)
+					throw new MalformedFSMException("Interface Command found outside of state block");
+				if(transition.command != null)
+				{
+					string transName = state + "To" + transition.targetstate + "On" + transition.command;
+					stream.WriteLine("\tFSM::InterfaceTransition<" + ClassName + "> " + transName + ";");
+					stream.WriteLine("\tFSM::InterfaceParam::Enum test"+transName+"(FSM::InterfaceParam* param);");
+					stream.WriteLine("\tvoid exec" + state + "To" + transition.targetstate + "On" + transition.command + "(FSM::InterfaceParam* param);");
+				}
+				else
+				{
+					string transName = state + "To" + transition.targetstate;
+					stream.WriteLine("\tFSM::Transition<" + ClassName + "> " + transName + ";");
+					stream.WriteLine("\tbool test" + transName + "();");
+					stream.WriteLine("\tvoid exec" + transName + "();");
+				}
+				stream.WriteLine();
+			}
+			if (s is GenericPopStatement)
+			{
+				try
+				{
+					statenames.Pop();
+				}
+				catch (Exception e)
+				{
+					throw new MalformedFSMException("Unexpected EOF. Unterminated state declaration?");
+				}
+			}
+
+			
+		}
+
+		public override void End()
+		{
+			//throw new NotImplementedException();
+		}
+	}
+
 	abstract class Statement
 	{
 		public FSM owner;
@@ -105,6 +212,19 @@ namespace FSMGen
 		public virtual bool ShouldPush() { return false; }
 		public virtual bool ShouldPop() { return false; }
 		public virtual List<Statement> Statements() { return null; }
+		public bool HasStatement(Type _type)
+		{
+			List<Statement> list = Statements();
+			if (list != null)
+			{
+				foreach (Statement s in list)
+				{
+					if (s.GetType().Equals(_type))
+						return true;
+				}
+			}
+			return false;
+		}
 
 		public void AcceptVisitor(FSMVisitor visitor)
 		{
@@ -200,8 +320,8 @@ namespace FSMGen
 
 	class TransitionStatement : Statement
 	{
-		string targetstate;
-		string command;
+		public string targetstate;
+		public string command;
 		public override void Consume(Queue<string> tokens)
 		{
 			if (FSM.IsToken(tokens.Peek()))
@@ -325,6 +445,12 @@ namespace FSMGen
 			commands.Init();
 			lastpopped.AcceptVisitor(commands);
 			commands.End();
+
+			DeclarationVisitor declaration = new DeclarationVisitor(stream);
+
+			declaration.Init();
+			lastpopped.AcceptVisitor(declaration);
+			declaration.End();
 		}
 	}
 
