@@ -97,10 +97,60 @@ namespace FSMGen
 		}
 	}
 
-	class DeclarationVisitor : FSMVisitor
+	abstract class StateVisitor : FSMVisitor
 	{
 		Stack<string> statenames = new Stack<string>();
+
+		public StateVisitor(StreamWriter stream)
+			: base(stream)
+		{ 
 		
+		}
+		public string GetState()
+		{	
+			return statenames.Peek();
+		}
+		public string GetParent()
+		{
+			string current = statenames.Pop();
+			string parent = statenames.Peek();
+			statenames.Push(current);
+			return parent;
+		}
+		public override bool Valid(Statement s)
+		{
+			if (s is StateStatement || s is GenericPopStatement)
+				return true;
+			
+			return base.Valid(s);
+		}
+
+		public override void Visit(Statement s)
+		{
+			if (s is StateStatement)
+			{
+				StateStatement state = s as StateStatement;
+				statenames.Push(state.name);
+			}
+			if (s is GenericPopStatement)
+			{
+				try
+				{
+					statenames.Pop();
+				}
+				catch (Exception e)
+				{
+					throw new MalformedFSMException("Unexpected EOF. Unterminated state declaration?");
+				}
+			}
+
+			base.Visit(s);
+		}
+		
+	}
+
+	class DeclarationVisitor : StateVisitor
+	{
 		public DeclarationVisitor(StreamWriter stream)
 			: base(stream)
 		{ }
@@ -115,27 +165,22 @@ namespace FSMGen
 
 		public override bool Valid(Statement s)
 		{
-			if (s is ClassStatement || s is StateStatement || s is TransitionStatement || s is TestStatement || s is GenericPopStatement)
+			if (s is StateStatement || s is TransitionStatement || s is TestStatement)
 			{
 				return true;
 			}
 
-			return false;
+			return base.Valid(s) ;
 		}
 
 		public override void Visit(Statement s)
 		{
-			if (s is ClassStatement)
-			{
-				ClassName = (s as ClassStatement).name;
-			}
+			base.Visit(s);
 			if (ClassName == null)			
 				throw new MalformedFSMException("No class statement found before state implementation.");
 			if (s is StateStatement)
 			{ 
 				StateStatement state = s as StateStatement;
-				statenames.Push(state.name);
-
 				//state statements only have enter/exit/update func declarations
 
 				stream.WriteLine("\tFSM::State<" + ClassName + "> " + state.name + ";");
@@ -150,7 +195,7 @@ namespace FSMGen
 			if (s is TestStatement)
 			{
 				TestStatement test = s as TestStatement;
-				string state = statenames.Peek();
+				string state = GetState();
 				if(state == null)
 					throw new MalformedFSMException("Interface Command found outside of state block");
 
@@ -165,7 +210,7 @@ namespace FSMGen
 			if( s is TransitionStatement )
 			{
 				TransitionStatement transition = s as TransitionStatement;
-				string state = statenames.Peek();
+				string state = GetState();
 				if(state == null)
 					throw new MalformedFSMException("Interface Command found outside of state block");
 				if(transition.command != null)
@@ -184,18 +229,6 @@ namespace FSMGen
 				}
 				stream.WriteLine();
 			}
-			if (s is GenericPopStatement)
-			{
-				try
-				{
-					statenames.Pop();
-				}
-				catch (Exception e)
-				{
-					throw new MalformedFSMException("Unexpected EOF. Unterminated state declaration?");
-				}
-			}
-
 			
 		}
 
@@ -204,6 +237,86 @@ namespace FSMGen
 			//throw new NotImplementedException();
 		}
 	}
+
+	class InitializationVisitor : StateVisitor
+	{
+		public InitializationVisitor(StreamWriter stream)
+			: base(stream)
+		{ }
+
+		public override void Init()
+		{
+			stream.WriteLine("\tInitializeFSM()");
+			stream.WriteLine("\t{");
+		}
+
+		public override bool Valid(Statement s)
+		{
+			if (s is StateStatement || s is TransitionStatement || s is TestStatement)
+			{
+				return true;
+			}
+
+			return base.Valid(s);
+		}
+
+		public override void Visit(Statement s)
+		{
+			base.Visit(s);
+
+			if (ClassName == null)
+				throw new MalformedFSMException("No class statement found before state implementation.");
+			if (s is StateStatement)
+			{
+				StateStatement state = s as StateStatement;
+
+				bool initial = state.HasStatement(typeof(InitialStatement));
+				bool update = state.HasStatement(typeof(UpdateStatement));
+
+				string parent = GetParent();
+				if (parent == null)
+					parent = "FSM";
+
+				if (update)
+				{
+					stream.WriteLine("FSM_INIT_STATE_UPDATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") +");");
+				}
+				else
+				{
+					stream.WriteLine("FSM_INIT_STATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
+				}
+
+				stream.WriteLine(parent + ".addChild(" + state.name + ");");
+
+				stream.WriteLine();
+			}
+			if (s is TestStatement)
+			{
+				TestStatement test = s as TestStatement;
+				//FSM_INIT_INTERFACECOMMAND(MyClass, TestA, MyNamedCommand);
+
+				stream.WriteLine();
+			}
+			if (s is TransitionStatement)
+			{
+				TransitionStatement transition = s as TransitionStatement;
+
+				string state = GetState();
+				if (state == null)
+					throw new MalformedFSMException("Interface Command found outside of state block");
+				//FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
+				//FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAA, MyNamedCommand, TestB);
+
+				stream.WriteLine();
+			}
+		}
+
+		public override void End()
+		{
+			stream.WriteLine("\t}");	
+		}
+	}
+
 
 	abstract class Statement
 	{

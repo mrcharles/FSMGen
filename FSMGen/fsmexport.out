@@ -9,6 +9,7 @@ enum InterfaceCommands
 	FSM::StateMachine<MyClass> FSM;
 	void onEnterFSM();
 	void onExitFSM();
+
 	FSM::State<MyClass> TestA;
 	void onEnterTestA();
 	void onExitTestA();
