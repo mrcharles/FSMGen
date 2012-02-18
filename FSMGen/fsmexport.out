@@ -51,3 +51,32 @@ enum InterfaceCommands
 	void onEnterSubstateBB();
 	void onExitSubstateBB();
 
+	InitializeFSM()
+	{
+		FSM_INIT_STATE_UPDATE(MyClass, TestA, true);
+		FSM.addChild(TestA);
+
+		FSM_INIT_INTERFACECOMMAND(MyClass, TestA, MyNamedCommand);
+
+		FSM_INIT_STATE(MyClass, SubstateAA, true);
+		TestA.addChild(SubstateAA);
+
+		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
+
+		FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAA, MyNamedCommand, TestB);
+
+		FSM_INIT_STATE(MyClass, SubstateAB, false);
+		SubstateAA.addChild(SubstateAB);
+
+		FSM_INIT_TRANSITION(MyClass, SubstateAB, TestB);
+
+		FSM_INIT_STATE(MyClass, TestB, false);
+		SubstateAB.addChild(TestB);
+
+		FSM_INIT_STATE(MyClass, SubstateBA, false);
+		TestB.addChild(SubstateBA);
+
+		FSM_INIT_STATE(MyClass, SubstateBB, false);
+		SubstateBA.addChild(SubstateBB);
+
+	}

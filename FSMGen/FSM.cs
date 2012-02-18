@@ -113,8 +113,15 @@ namespace FSMGen
 		public string GetParent()
 		{
 			string current = statenames.Pop();
-			string parent = statenames.Peek();
-			statenames.Push(current);
+			string parent = null;
+			try
+			{
+				parent = statenames.Peek();
+			}
+			finally
+			{
+				statenames.Push(current);
+			}
 			return parent;
 		}
 		public override bool Valid(Statement s)
@@ -273,27 +280,38 @@ namespace FSMGen
 				bool initial = state.HasStatement(typeof(InitialStatement));
 				bool update = state.HasStatement(typeof(UpdateStatement));
 
-				string parent = GetParent();
-				if (parent == null)
+				string parent = null;
+
+				try
+				{
+					parent = GetParent();
+				}
+				catch(Exception e)
+				{
 					parent = "FSM";
+				}
 
 				if (update)
 				{
-					stream.WriteLine("FSM_INIT_STATE_UPDATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") +");");
+					stream.WriteLine("\t\tFSM_INIT_STATE_UPDATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
 				}
 				else
 				{
-					stream.WriteLine("FSM_INIT_STATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
+					stream.WriteLine("\t\tFSM_INIT_STATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
 				}
 
-				stream.WriteLine(parent + ".addChild(" + state.name + ");");
+				stream.WriteLine("\t\t" + parent + ".addChild(" + state.name + ");");
 
 				stream.WriteLine();
 			}
 			if (s is TestStatement)
 			{
 				TestStatement test = s as TestStatement;
-				//FSM_INIT_INTERFACECOMMAND(MyClass, TestA, MyNamedCommand);
+				string state = GetState();
+				if (state == null)
+					throw new MalformedFSMException("Interface Test found outside of state block");
+
+				stream.WriteLine("\t\tFSM_INIT_INTERFACECOMMAND(" + ClassName + ", " + GetState() + ", " + test.name + ");");
 
 				stream.WriteLine();
 			}
@@ -302,10 +320,21 @@ namespace FSMGen
 				TransitionStatement transition = s as TransitionStatement;
 
 				string state = GetState();
-				if (state == null)
-					throw new MalformedFSMException("Interface Command found outside of state block");
-				//FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
-				//FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAA, MyNamedCommand, TestB);
+
+				if (transition.command == null)
+				{
+					if (state == null)
+						throw new MalformedFSMException("Interface Transition found outside of state block");
+
+					stream.WriteLine("\t\tFSM_INIT_TRANSITION(" + ClassName + ", " + GetState() + ", " + transition.targetstate + ");");
+				}
+				else
+				{
+					if (state == null)
+						throw new MalformedFSMException("Interface Command found outside of state block");
+					
+					stream.WriteLine("\t\tFSM_INIT_INTERFACETRANSITION(" + ClassName + ", " + GetState() + ", " + transition.command + ", " + transition.targetstate + ");");
+				}
 
 				stream.WriteLine();
 			}
@@ -565,6 +594,12 @@ namespace FSMGen
 			declaration.Init();
 			lastpopped.AcceptVisitor(declaration);
 			declaration.End();
+
+			InitializationVisitor init = new InitializationVisitor(stream);
+
+			init.Init();
+			lastpopped.AcceptVisitor(init);
+			init.End();
 		}
 	}
 
