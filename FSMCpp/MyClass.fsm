@@ -1,0 +1,27 @@
+startfsm
+
+class MyClass
+interfacecommand MyNamedCommand
+
+state TestA
+	initial
+	update
+	test MyNamedCommand
+	state SubstateAA
+		initial
+		transition SubstateAB
+		transition MyNamedCommand TestB
+	endstate
+	state SubstateAB
+		transition TestB
+	endstate
+endstate
+
+state TestB
+	state SubstateBA
+	endstate
+	state SubstateBB
+	endstate
+endstate
+
+endfsm

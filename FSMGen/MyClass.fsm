@@ -3,6 +3,7 @@ startfsm
 class MyClass
 interfacecommand MyNamedCommand
 interfacecommand TestCommand
+interfacecommand SDFDSF
 
 state TestA
 	initial

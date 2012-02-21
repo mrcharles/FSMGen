@@ -57,8 +57,9 @@ namespace FSMGen
 			{}
 		public override void Init()
 		{
-			stream.WriteLine("enum InterfaceCommands");
-			stream.WriteLine("{");
+			stream.WriteLine("public:");
+			stream.WriteLine("\tenum InterfaceCommands");
+			stream.WriteLine("\t{");
 		}
 
 		public override bool Valid(Statement s)
@@ -80,7 +81,7 @@ namespace FSMGen
 
 				InterfaceCommandStatement command = s as InterfaceCommandStatement;
 				
-				stream.WriteLine("\t" + command.name + " = " + commandIndex + ",");
+				stream.WriteLine("\t\t" + command.name + " = " + commandIndex + ",");
 				commandIndex++;
 			}
 			else
@@ -91,7 +92,7 @@ namespace FSMGen
 
 		public override void End()
 		{
-			stream.WriteLine("};");
+			stream.WriteLine("\t};");
 			stream.WriteLine();
 			stream.WriteLine();
 		}
@@ -164,7 +165,9 @@ namespace FSMGen
 
 		public override void Init()
 		{
+			stream.WriteLine("public:");
 			stream.WriteLine("\tFSM::StateMachine<MyClass> FSM;");
+			stream.WriteLine("private:");
 			stream.WriteLine("\tvoid onEnterFSM();");
 			stream.WriteLine("\tvoid onExitFSM();");
 			stream.WriteLine();
@@ -195,7 +198,7 @@ namespace FSMGen
 				stream.WriteLine("\tvoid onExit" + state.name + "();");
 				if (state.HasStatement(typeof(UpdateStatement)))
 				{
-					stream.WriteLine("\tvoid onUpdate" + state.name + "(float dt);");
+					stream.WriteLine("\tvoid update" + state.name + "(float dt);");
 				}
 				stream.WriteLine();
 			}
@@ -210,7 +213,7 @@ namespace FSMGen
 
 				stream.WriteLine("\tFSM::InterfaceCommand<" + ClassName + "> " + transName + ";");
 
-				stream.WriteLine("\tFSM::InterfaceParam::Enum test"+transName+"(FSM::InterfaceParam* param);");
+				stream.WriteLine("\tFSM::InterfaceResult::Enum test"+transName+"(FSM::InterfaceParam* param);");
 				stream.WriteLine("\tvoid exec"+transName+"(FSM::InterfaceParam* param);");
 				stream.WriteLine();
 			}
@@ -224,7 +227,7 @@ namespace FSMGen
 				{
 					string transName = state + "To" + transition.targetstate + "On" + transition.command;
 					stream.WriteLine("\tFSM::InterfaceTransition<" + ClassName + "> " + transName + ";");
-					stream.WriteLine("\tFSM::InterfaceParam::Enum test"+transName+"(FSM::InterfaceParam* param);");
+					stream.WriteLine("\tFSM::InterfaceResult::Enum test"+transName+"(FSM::InterfaceParam* param);");
 					stream.WriteLine("\tvoid exec" + state + "To" + transition.targetstate + "On" + transition.command + "(FSM::InterfaceParam* param);");
 				}
 				else
@@ -253,7 +256,7 @@ namespace FSMGen
 
 		public override void Init()
 		{
-			stream.WriteLine("\tInitializeFSM()");
+			stream.WriteLine("\tvoid InitializeFSM()");
 			stream.WriteLine("\t{");
 		}
 

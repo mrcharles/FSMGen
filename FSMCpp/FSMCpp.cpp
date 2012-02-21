@@ -4,34 +4,7 @@
 #include "stdafx.h"
 #include "fsm_stl.h"
 
-class MyClass
-{
-public:
-#include "MyClass_fsm.h"
-
-public:
-	MyClass()
-	{
-		InitializeFSM();
-		FSM.activate();
-	}
-
-
-
-	void update()
-	{
-		FSM.update(0.1f);
-	}
-
-	void status()
-	{
-		FSM.status();
-	}
-
-private:
-};
-
-
+#include "MyClass.h"
 
 int _tmain(int argc, _TCHAR* argv[])
 {
