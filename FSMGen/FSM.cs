@@ -10,9 +10,13 @@ namespace FSMGen
 	{
 		public MalformedFSMException() {}
 			
-		public MalformedFSMException(string message) {}
+		public MalformedFSMException(string message)
+            :base(message)
+        {}
 			
-		public MalformedFSMException(string message, System.Exception inner) {}
+		public MalformedFSMException(string message, System.Exception inner) 
+            :base(message, inner)
+        {}
  
 		protected MalformedFSMException(System.Runtime.Serialization.SerializationInfo info,
 			System.Runtime.Serialization.StreamingContext context)
@@ -166,16 +170,11 @@ namespace FSMGen
 		public override void Init()
 		{
 			stream.WriteLine("public:");
-			stream.WriteLine("\tFSM::StateMachine<MyClass> FSM;");
-			stream.WriteLine("private:");
-			stream.WriteLine("\tvoid onEnterFSM();");
-			stream.WriteLine("\tvoid onExitFSM();");
-			stream.WriteLine();
 		}
 
 		public override bool Valid(Statement s)
 		{
-			if (s is StateStatement || s is TransitionStatement || s is TestStatement)
+			if (s is ClassStatement || s is StateStatement || s is TransitionStatement || s is TestStatement)
 			{
 				return true;
 			}
@@ -188,6 +187,14 @@ namespace FSMGen
 			base.Visit(s);
 			if (ClassName == null)			
 				throw new MalformedFSMException("No class statement found before state implementation.");
+            if (s is ClassStatement)
+            {
+                stream.WriteLine("\tFSM::StateMachine<" + ClassName + "> FSM;");
+                stream.WriteLine("private:");
+                stream.WriteLine("\tvoid onEnterFSM();");
+                stream.WriteLine("\tvoid onExitFSM();");
+                stream.WriteLine();
+            }
 			if (s is StateStatement)
 			{ 
 				StateStatement state = s as StateStatement;
@@ -262,7 +269,7 @@ namespace FSMGen
 
 		public override bool Valid(Statement s)
 		{
-			if (s is StateStatement || s is TransitionStatement || s is TestStatement)
+			if (s is ClassStatement || s is StateStatement || s is TransitionStatement || s is TestStatement)
 			{
 				return true;
 			}
@@ -276,6 +283,11 @@ namespace FSMGen
 
 			if (ClassName == null)
 				throw new MalformedFSMException("No class statement found before state implementation.");
+            if (s is ClassStatement)
+            {
+                stream.WriteLine("\t\tFSM_INIT(" + ClassName + ");");
+                stream.WriteLine();
+            }
 			if (s is StateStatement)
 			{
 				StateStatement state = s as StateStatement;
@@ -571,16 +583,21 @@ namespace FSMGen
 				}
 				else if (statement.ShouldPop())
 				{
-					lastpopped = statements.Pop();
-				}
+                    lastpopped = statements.Pop();
+                    
+                    if(statements.Count > 0)
+                        statements.Peek().Statements().Add(statement);
+                }
 				else //add to current statement
 				{
-					statements.Peek().Statements().Add(statement);
-				}
-				
-
-
+                    statements.Peek().Statements().Add(statement);
+                }
 			}
+
+            if (statements.Count > 0) //we have terminated without closing the FSM.
+            {
+                throw new MalformedFSMException("Unexpected EOF: Did you forget an endstate/endfsm?");
+            }
 
 		}
 		
