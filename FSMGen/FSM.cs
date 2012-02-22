@@ -112,11 +112,11 @@ namespace FSMGen
 		
 		public void Export(StreamWriter stream)
 		{ 
-			CommandsVisitor commands = new CommandsVisitor(stream);
+            //CommandsVisitor commands = new CommandsVisitor(stream);
 
-			commands.Init();
-			lastpopped.AcceptVisitor(commands);
-			commands.End();
+            //commands.Init();
+            //lastpopped.AcceptVisitor(commands);
+            //commands.End();
 
 			DeclarationVisitor declaration = new DeclarationVisitor(stream);
 
