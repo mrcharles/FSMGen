@@ -46,7 +46,7 @@ namespace FSMGen
 			catch (MalformedFSMException e)
 			{
 				//MessageBox.Show(e.Message, "FSMGen Failed: " + fullname);
-                Console.WriteLine(fullname + "(" + e.line + ") : error : " + e.Message);
+                Console.WriteLine(file + "(" + e.line + ") : error : " + e.Message);
 				return false;
 			}
 			finally
@@ -65,7 +65,7 @@ namespace FSMGen
 			catch (MalformedFSMException e)
 			{
 				//MessageBox.Show(e.Message, "FSMGen Failed:" + fullname);
-                Console.WriteLine(fullname + "(" + e.line + ") : error : " + e.Message);
+                Console.WriteLine(file + "(" + e.line + ") : error : " + e.Message);
                 writer.Dispose();
 				return false;
 			}
