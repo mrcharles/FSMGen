@@ -17,10 +17,10 @@ private:
 	FSM::State<MyClass> TestA;
 	void onEnterTestA();
 	void onExitTestA();
-	void onUpdateTestA(float dt);
+	void updateTestA(float dt);
 
 	FSM::InterfaceCommand<MyClass> TestAOnMyNamedCommand;
-	FSM::InterfaceParam::Enum testTestAOnMyNamedCommand(FSM::InterfaceParam* param);
+	FSM::InterfaceResult::Enum testTestAOnMyNamedCommand(FSM::InterfaceParam* param);
 	void execTestAOnMyNamedCommand(FSM::InterfaceParam* param);
 
 	FSM::State<MyClass> SubstateAA;
@@ -32,7 +32,7 @@ private:
 	void execSubstateAAToSubstateAB();
 
 	FSM::InterfaceTransition<MyClass> SubstateAAToTestBOnMyNamedCommand;
-	FSM::InterfaceParam::Enum testSubstateAAToTestBOnMyNamedCommand(FSM::InterfaceParam* param);
+	FSM::InterfaceResult::Enum testSubstateAAToTestBOnMyNamedCommand(FSM::InterfaceParam* param);
 	void execSubstateAAToTestBOnMyNamedCommand(FSM::InterfaceParam* param);
 
 	FSM::State<MyClass> SubstateAB;
@@ -55,8 +55,10 @@ private:
 	void onEnterSubstateBB();
 	void onExitSubstateBB();
 
-	InitializeFSM()
+	void InitializeFSM()
 	{
+		FSM_INIT(MyClass);
+
 		FSM_INIT_STATE_UPDATE(MyClass, TestA, true);
 		FSM.addChild(TestA);
 
@@ -70,17 +72,17 @@ private:
 		FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAA, MyNamedCommand, TestB);
 
 		FSM_INIT_STATE(MyClass, SubstateAB, false);
-		SubstateAA.addChild(SubstateAB);
+		TestA.addChild(SubstateAB);
 
 		FSM_INIT_TRANSITION(MyClass, SubstateAB, TestB);
 
 		FSM_INIT_STATE(MyClass, TestB, false);
-		SubstateAB.addChild(TestB);
+		FSM.addChild(TestB);
 
 		FSM_INIT_STATE(MyClass, SubstateBA, false);
 		TestB.addChild(SubstateBA);
 
 		FSM_INIT_STATE(MyClass, SubstateBB, false);
-		SubstateBA.addChild(SubstateBB);
+		TestB.addChild(SubstateBB);
 
 	}

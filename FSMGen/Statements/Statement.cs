@@ -9,6 +9,7 @@ namespace FSMGen.Statements
     abstract class Statement
     {
         public FSM owner;
+        public int line;
 
         public virtual void Consume(Queue<string> tokens) { }
         public virtual bool ShouldPush() { return false; }

@@ -16,7 +16,7 @@ namespace FSMGen
 		//string [] rawtokens;
 		static public Dictionary<string, Type> Tokens;
 		public HashSet<string> Commands = new HashSet<string>();
-
+        int currentLine = 0;
 		Stack<Statement> statements = new Stack<Statement>();
 
 		//temp hack so we don't pop the entire parsed fsm off the stack and thus lose it.
@@ -54,53 +54,58 @@ namespace FSMGen
 		}
 
 
-		public FSM(string buffer)
+		public FSM(StreamReader stream)
 		{
 			InitTokensDictionary();
-			rawtokens = new Queue<string>(buffer.Split(null));
 
-			while (rawtokens.Count > 0)
-			{
-				string token = rawtokens.Dequeue();
+            while (!stream.EndOfStream)
+            {
+                currentLine++;
+                rawtokens = new Queue<string>(stream.ReadLine().Split(null));
 
-				if (token == "")
-					continue;
+                while (rawtokens.Count > 0)
+                {
+                    string token = rawtokens.Dequeue();
 
-				if (!IsToken(token))
-					throw new MalformedFSMException("Unexpected identifier " + token + ", expected keyword.");
+                    if (token == "")
+                        continue;
 
-				Type statementtype = Tokens[token];
+                    if (!IsToken(token))
+                        throw new MalformedFSMException("Unexpected identifier " + token + ", expected keyword.", currentLine);
 
-				Statement statement = (Statement)Activator.CreateInstance(statementtype);
-				statement.owner = this;
+                    Type statementtype = Tokens[token];
 
-				System.Diagnostics.Debug.Assert(statement != null);
+                    Statement statement = (Statement)Activator.CreateInstance(statementtype);
+                    statement.owner = this;
+                    statement.line = currentLine;
 
-				statement.Consume(rawtokens);
-				if (statement.ShouldPush())
-				{
-					//we need to add it to the current state, if it exists.
-					//it may not exist if this is the first statement (Global)
-					if(statements.Count > 0)
-						statements.Peek().Statements().Add(statement);
-					statements.Push(statement);
-				}
-				else if (statement.ShouldPop())
-				{
-                    lastpopped = statements.Pop();
-                    
-                    if(statements.Count > 0)
+                    System.Diagnostics.Debug.Assert(statement != null);
+
+                    statement.Consume(rawtokens);
+                    if (statement.ShouldPush())
+                    {
+                        //we need to add it to the current state, if it exists.
+                        //it may not exist if this is the first statement (Global)
+                        if (statements.Count > 0)
+                            statements.Peek().Statements().Add(statement);
+                        statements.Push(statement);
+                    }
+                    else if (statement.ShouldPop())
+                    {
+                        lastpopped = statements.Pop();
+
+                        if (statements.Count > 0)
+                            statements.Peek().Statements().Add(statement);
+                    }
+                    else //add to current statement
+                    {
                         statements.Peek().Statements().Add(statement);
+                    }
                 }
-				else //add to current statement
-				{
-                    statements.Peek().Statements().Add(statement);
-                }
-			}
-
+            }
             if (statements.Count > 0) //we have terminated without closing the FSM.
             {
-                throw new MalformedFSMException("Unexpected EOF: Did you forget an endstate/endfsm?");
+                throw new MalformedFSMException("Unexpected EOF: Did you forget an endstate/endfsm?", currentLine);
             }
 
 		}

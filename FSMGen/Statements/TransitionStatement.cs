@@ -12,7 +12,7 @@ namespace FSMGen.Statements
         public override void Consume(Queue<string> tokens)
         {
             if (FSM.IsToken(tokens.Peek()))
-                throw new MalformedFSMException("Unexpected token " + tokens.Peek() + ", expected identifier or interface command.");
+                throw new MalformedFSMException("Unexpected token " + tokens.Peek() + ", expected identifier or interface command.", line);
 
             if (owner.Commands.Contains(tokens.Peek())) //this is an interfacecommand transition
             {
@@ -21,7 +21,7 @@ namespace FSMGen.Statements
 
             if (FSM.IsToken(tokens.Peek()))
             {
-                throw new MalformedFSMException("Unexpected token " + tokens.Peek() + ", expected identifier.");
+                throw new MalformedFSMException("Unexpected token " + tokens.Peek() + ", expected identifier.", line);
             }
             targetstate = tokens.Dequeue();
         }

@@ -12,7 +12,7 @@ namespace FSMGen.Statements
         {
             if (FSM.IsToken(tokens.Peek()))
             {
-                throw new MalformedFSMException("Unexpected token: " + tokens.Peek() + ", expected identifier.");
+                throw new MalformedFSMException("Unexpected token: " + tokens.Peek() + ", expected identifier.", line);
             }
 
             name = tokens.Dequeue();

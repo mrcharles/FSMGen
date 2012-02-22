@@ -29,7 +29,7 @@ namespace FSMGen
 
             return false;
         }
-		static void ProcessFile(string file)
+		static bool ProcessFile(string file)
 		{
 			string fullname = Path.GetFileName(file);
 			string name = Path.GetFileNameWithoutExtension(file);
@@ -41,12 +41,13 @@ namespace FSMGen
 			FSM fsm = null;
 			try
 			{
-				fsm = new FSM(reader.ReadToEnd());
+				fsm = new FSM(reader);
 			}
 			catch (MalformedFSMException e)
 			{
-				MessageBox.Show(e.Message, "FSMGen Failed: " + fullname);
-				return;
+				//MessageBox.Show(e.Message, "FSMGen Failed: " + fullname);
+                Console.WriteLine(fullname + "(" + e.line + ") : error : " + e.Message);
+				return false;
 			}
 			finally
 			{
@@ -63,22 +64,25 @@ namespace FSMGen
 			}
 			catch (MalformedFSMException e)
 			{
-				MessageBox.Show(e.Message, "FSMGen Failed:" + fullname);
-				writer.Dispose();
-				return;
+				//MessageBox.Show(e.Message, "FSMGen Failed:" + fullname);
+                Console.WriteLine(fullname + "(" + e.line + ") : error : " + e.Message);
+                writer.Dispose();
+				return false;
 			}
 			writer.Flush();
 			writer.Close();
-		
+
+            return true;
 		}
 
-		static void Main(string[] args)
+		static int Main(string[] args)
 		{
 			//MessageBox.Show("startin asdfasdfsadfg");
             if (args.Length > 0)
             {
-                if(ShouldExport(args[0]))
-                    ProcessFile(args[0]);
+                if (ShouldExport(args[0]))
+                    if (!ProcessFile(args[0]))
+                        Environment.Exit(1);
             }
 
 			//foreach (string s in args)
@@ -86,7 +90,7 @@ namespace FSMGen
 			//    //MessageBox.Show(s);
 			//}
 
-			
+            return 0;
 		}
 	}
 }

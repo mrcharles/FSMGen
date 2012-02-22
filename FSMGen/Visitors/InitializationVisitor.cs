@@ -34,7 +34,7 @@ namespace FSMGen.Visitors
             base.Visit(s);
 
             if (ClassName == null)
-                throw new MalformedFSMException("No class statement found before state implementation.");
+                throw new MalformedFSMException("No class statement found before state implementation.", s.line);
             if (s is ClassStatement)
             {
                 stream.WriteLine("\t\tFSM_INIT(" + ClassName + ");");
@@ -76,7 +76,7 @@ namespace FSMGen.Visitors
                 TestStatement test = s as TestStatement;
                 string state = GetState();
                 if (state == null)
-                    throw new MalformedFSMException("Interface Test found outside of state block");
+                    throw new MalformedFSMException("Interface Test found outside of state block", s.line);
 
                 stream.WriteLine("\t\tFSM_INIT_INTERFACECOMMAND(" + ClassName + ", " + GetState() + ", " + test.name + ");");
 
@@ -91,14 +91,14 @@ namespace FSMGen.Visitors
                 if (transition.command == null)
                 {
                     if (state == null)
-                        throw new MalformedFSMException("Interface Transition found outside of state block");
+                        throw new MalformedFSMException("Interface Transition found outside of state block", s.line);
 
                     stream.WriteLine("\t\tFSM_INIT_TRANSITION(" + ClassName + ", " + GetState() + ", " + transition.targetstate + ");");
                 }
                 else
                 {
                     if (state == null)
-                        throw new MalformedFSMException("Interface Command found outside of state block");
+                        throw new MalformedFSMException("Interface Command found outside of state block", s.line);
 
                     stream.WriteLine("\t\tFSM_INIT_INTERFACETRANSITION(" + ClassName + ", " + GetState() + ", " + transition.command + ", " + transition.targetstate + ");");
                 }

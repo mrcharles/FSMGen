@@ -57,7 +57,7 @@ namespace FSMGen.Visitors
                 }
                 catch (Exception)
                 {
-                    throw new MalformedFSMException("Unexpected EOF. Unterminated state declaration?");
+                    throw new MalformedFSMException("Unexpected EOF. Unterminated state declaration?", s.line);
                 }
             }
 

@@ -35,7 +35,7 @@ namespace FSMGen.Visitors
             if (s is InterfaceCommandStatement)
             {
                 if (ClassName == null)
-                    throw new MalformedFSMException("Encountered interfacecommand directive before class directive.");
+                    throw new MalformedFSMException("Encountered interfacecommand directive before class directive.", s.line);
 
                 InterfaceCommandStatement command = s as InterfaceCommandStatement;
 
