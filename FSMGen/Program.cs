@@ -70,7 +70,7 @@ namespace FSMGen
 			writer.AutoFlush = false;
 			try
 			{
-				fsm.Export(writer);
+				fsm.Export(writer, config);
 			}
 			catch (MalformedFSMException e)
 			{

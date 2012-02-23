@@ -9,9 +9,12 @@ namespace FSMGen.Visitors
 {
     class InitializationVisitor : StateVisitor
     {
-        public InitializationVisitor(StreamWriter stream)
+        ConfigData data;
+        public InitializationVisitor(StreamWriter stream, ConfigData _data)
             : base(stream)
-        { }
+        { 
+            data = _data;
+        }
 
         public override void Init()
         {

@@ -115,21 +115,24 @@ namespace FSMGen
             lastpopped.AcceptVisitor(visitor);
         }
 		
-		public void Export(StreamWriter stream)
-		{ 
-            //CommandsVisitor commands = new CommandsVisitor(stream);
+		public void Export(StreamWriter stream, Config config)
+		{
+            if (config.Data.useglobalcommands == false)
+            {
+                CommandsVisitor commands = new CommandsVisitor(stream);
 
-            //commands.Init();
-            //lastpopped.AcceptVisitor(commands);
-            //commands.End();
+                commands.Init();
+                lastpopped.AcceptVisitor(commands);
+                commands.End();
+            }
 
-			DeclarationVisitor declaration = new DeclarationVisitor(stream);
+			DeclarationVisitor declaration = new DeclarationVisitor(stream, config.Data);
 
 			declaration.Init();
 			lastpopped.AcceptVisitor(declaration);
 			declaration.End();
 
-			InitializationVisitor init = new InitializationVisitor(stream);
+			InitializationVisitor init = new InitializationVisitor(stream, config.Data);
 
 			init.Init();
 			lastpopped.AcceptVisitor(init);

@@ -89,7 +89,7 @@ namespace FSMGen.Visitors
                 stream.WriteLine("\t\t" + s + ",");
             }
 
-            stream.WriteLine("\t}");
+            stream.WriteLine("\t};");
             stream.WriteLine("}");
 
             stream.WriteLine("#endif // INTERFACECOMMANDS_H");
