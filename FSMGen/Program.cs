@@ -4,11 +4,14 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
+using FSMGen.Visitors;
 
 namespace FSMGen
 {
 	class Program
 	{
+        static Config config = new Config();
+
         static bool ShouldExport(string file)
         {
             string fullname = Path.GetFileName(file);
@@ -29,7 +32,8 @@ namespace FSMGen
 
             return false;
         }
-		static bool ProcessFile(string file)
+
+		static bool ProcessFile(string file, FSMVisitor specialVisitor = null)
 		{
 			string fullname = Path.GetFileName(file);
 			string name = Path.GetFileNameWithoutExtension(file);
@@ -54,6 +58,12 @@ namespace FSMGen
 				reader.Close();
 			}
 
+            if (specialVisitor != null)
+            {
+                fsm.AcceptVisitor(specialVisitor);
+            }
+
+
 			//the generated filename needs to be defined by info parsed from the .fsm file. TODO with language def.
 			//or maybe fsm.Export can return a file name.
 			StreamWriter writer = new StreamWriter(outputfilename, false);
@@ -77,14 +87,17 @@ namespace FSMGen
 
 		static int Main(string[] args)
 		{
+            GlobalCommandVisitor commands = new GlobalCommandVisitor(config.Data.commandheaderfile, config.Data.commandsdb);
+            commands.Init();
 			//MessageBox.Show("startin asdfasdfsadfg");
             if (args.Length > 0)
             {
                 if (ShouldExport(args[0]))
-                    if (!ProcessFile(args[0]))
+                    if (!ProcessFile(args[0], commands))
                         Environment.Exit(1);
             }
 
+            commands.End();
 			//foreach (string s in args)
 			//{
 			//    //MessageBox.Show(s);

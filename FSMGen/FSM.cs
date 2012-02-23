@@ -109,6 +109,11 @@ namespace FSMGen
             }
 
 		}
+
+        public void AcceptVisitor(FSMVisitor visitor)
+        {
+            lastpopped.AcceptVisitor(visitor);
+        }
 		
 		public void Export(StreamWriter stream)
 		{ 
