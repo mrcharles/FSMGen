@@ -25,6 +25,7 @@ namespace FSMGen
     class Config
     {
         ConfigData data;
+        public string configFile;
 
         public ConfigData Data
         {
@@ -32,13 +33,14 @@ namespace FSMGen
         }
 
         public Config()
-            :this("fsmgen.config")
+            :this( Path.Combine(Path.GetDirectoryName( System.Reflection.Assembly.GetEntryAssembly().Location), "fsmgen.config"))
         { 
         
         }
 
         public Config(string configfile)
         {
+            configFile = configfile;
             try
             {
                 StreamReader stream = new StreamReader(configfile);

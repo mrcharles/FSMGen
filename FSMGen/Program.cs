@@ -87,17 +87,21 @@ namespace FSMGen
 
 		static int Main(string[] args)
 		{
-            GlobalCommandVisitor commands = new GlobalCommandVisitor(config.Data.commandheaderfile, config.Data.commandsdb);
-            commands.Init();
 			//MessageBox.Show("startin asdfasdfsadfg");
             if (args.Length > 0)
             {
                 if (ShouldExport(args[0]))
+                {
+                    GlobalCommandVisitor commands = new GlobalCommandVisitor(Path.Combine(Path.GetDirectoryName(config.configFile), config.Data.commandheaderfile), Path.Combine(Path.GetDirectoryName(config.configFile), config.Data.commandsdb));
+                    commands.Init();
+
                     if (!ProcessFile(args[0], commands))
                         Environment.Exit(1);
+
+                    commands.End();
+                }
             }
 
-            commands.End();
 			//foreach (string s in args)
 			//{
 			//    //MessageBox.Show(s);
