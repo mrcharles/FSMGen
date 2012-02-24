@@ -103,13 +103,18 @@ namespace FSMGen
 
                 if (ShouldExport(args[arg]))
                 {
-                    GlobalCommandVisitor commands = new GlobalCommandVisitor(config.CommandsHeader, config.CommandsDB);
-                    commands.Init();
+                    GlobalCommandVisitor commands = null;
+                    if (config.UseGlobalCommands)
+                    {
+                        commands = new GlobalCommandVisitor(config.CommandsHeader, config.CommandsDB);
+                        commands.Init();
+                    }
 
                     if (!ProcessFile(args[arg], commands))
                         Environment.Exit(1);
 
-                    commands.End();
+                    if(commands != null)
+                        commands.End();
                 }
             }
 

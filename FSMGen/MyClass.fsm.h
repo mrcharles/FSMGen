@@ -1,4 +1,14 @@
 public:
+	enum InterfaceCommands
+	{
+		MyNamedCommand = 0,
+		TestCommand = 1,
+		SDFDSF = 2,
+		ThisIsInAWeirdPlace = 3,
+	};
+
+
+public:
 	FSM::StateMachine<MyClass> FSM;
 private:
 	void onEnterFSM();
