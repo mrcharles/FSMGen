@@ -25,7 +25,32 @@ namespace FSMGen
     class Config
     {
         ConfigData data;
-        public string configFile;
+        string configFile;
+        string rootPath;
+
+        public string CommandsDB
+        {
+            get
+            {
+                return Path.Combine(rootPath, data.commandsdb);
+            }
+        }
+
+        public string CommandsHeader
+        {
+            get
+            {
+                return Path.Combine(rootPath, data.commandheaderfile);
+            }
+        }
+
+        public bool UseGlobalCommands
+        {
+            get
+            {
+                return data.useglobalcommands;
+            }
+        }
 
         public ConfigData Data
         {
@@ -40,7 +65,17 @@ namespace FSMGen
 
         public Config(string configfile)
         {
-            configFile = configfile;
+            if (Path.IsPathRooted(configfile))
+            {
+                configFile = configfile;
+                rootPath = Path.GetDirectoryName(configFile);
+            }
+            else
+            {
+                rootPath = Directory.GetCurrentDirectory();
+                configFile = Path.Combine(rootPath, configfile);
+            }
+
             try
             {
                 StreamReader stream = new StreamReader(configfile);
@@ -50,6 +85,7 @@ namespace FSMGen
             catch(Exception)
             {
                 data = new ConfigData();
+                
                 StreamWriter stream = new StreamWriter(configfile, false);
                 XmlSerializer xml = new XmlSerializer(typeof(ConfigData));
                 xml.Serialize(stream, data);

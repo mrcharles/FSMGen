@@ -39,7 +39,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <CustomBuildBeforeTargets>BuildCompile</CustomBuildBeforeTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -58,7 +59,8 @@
     <CustomBuildStep>
       <Command>
       </Command>
-      <Message>Generating FSMs...</Message>
+      <Message>
+      </Message>
       <Outputs>
       </Outputs>
     </CustomBuildStep>
@@ -88,6 +90,7 @@
     <CustomBuild Include="MyClass.fsm">
       <FileType>Document</FileType>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(RootDir)%(Directory)%(FileName).fsm.h</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%25FSMGENOUTPUT%25\FSMGen.exe %(FullPath)</Command>
     </CustomBuild>
     <None Include="ReadMe.txt" />
   </ItemGroup>

@@ -10,7 +10,7 @@ namespace FSMGen
 {
 	class Program
 	{
-        static Config config = new Config();
+        static Config config;
 
         static bool ShouldExport(string file)
         {
@@ -90,12 +90,23 @@ namespace FSMGen
 			//MessageBox.Show("startin asdfasdfsadfg");
             if (args.Length > 0)
             {
-                if (ShouldExport(args[0]))
+                int arg = 0;
+                if (Path.GetExtension(args[arg]) == ".config")
                 {
-                    GlobalCommandVisitor commands = new GlobalCommandVisitor(Path.Combine(Path.GetDirectoryName(config.configFile), config.Data.commandheaderfile), Path.Combine(Path.GetDirectoryName(config.configFile), config.Data.commandsdb));
+                    config = new Config(args[arg]);
+                    arg++;
+                }
+                else 
+                {
+                    config = new Config();
+                }
+
+                if (ShouldExport(args[arg]))
+                {
+                    GlobalCommandVisitor commands = new GlobalCommandVisitor(config.CommandsHeader, config.CommandsDB);
                     commands.Init();
 
-                    if (!ProcessFile(args[0], commands))
+                    if (!ProcessFile(args[arg], commands))
                         Environment.Exit(1);
 
                     commands.End();

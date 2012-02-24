@@ -5,6 +5,10 @@ namespace InterfaceCommands
 {
 	enum Enum
 	{
-	}
+		MyNamedCommand,
+		TestCommand,
+		SDFDSF,
+		ThisIsInAWeirdPlace,
+	};
 }
 #endif // INTERFACECOMMANDS_H
