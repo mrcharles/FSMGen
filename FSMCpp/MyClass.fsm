@@ -9,6 +9,7 @@ state TestA
 	test MyNamedCommand
 	state SubstateAA
 		initial
+		transition SubstateAA
 		transition SubstateAB
 		transition MyNamedCommand TestB
 	endstate
@@ -19,6 +20,7 @@ endstate
 
 state TestB
 	state SubstateBA
+		initial
 	endstate
 	state SubstateBB
 	endstate

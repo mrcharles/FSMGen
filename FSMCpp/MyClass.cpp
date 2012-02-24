@@ -18,6 +18,10 @@ void MyClass::execTestAOnMyNamedCommand(FSM::InterfaceParam* param)
 //State SubstateAA
 void MyClass::onEnterSubstateAA(){}
 void MyClass::onExitSubstateAA(){}
+
+bool MyClass::testSubstateAAToSubstateAA(){ return false;}
+void MyClass::execSubstateAAToSubstateAA(){}
+
 bool MyClass::testSubstateAAToSubstateAB(){ return false;}
 void MyClass::execSubstateAAToSubstateAB(){}
 FSM::InterfaceResult::Enum MyClass::testSubstateAAToTestBOnMyNamedCommand(FSM::InterfaceParam* param){return FSM::InterfaceResult::Success;}

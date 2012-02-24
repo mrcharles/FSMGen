@@ -1,11 +1,4 @@
 public:
-	enum InterfaceCommands
-	{
-		MyNamedCommand = 0,
-	};
-
-
-public:
 	FSM::StateMachine<MyClass> FSM;
 private:
 	void onEnterFSM();
@@ -23,6 +16,10 @@ private:
 	FSM::State<MyClass> SubstateAA;
 	void onEnterSubstateAA();
 	void onExitSubstateAA();
+
+	FSM::Transition<MyClass> SubstateAAToSubstateAA;
+	bool testSubstateAAToSubstateAA();
+	void execSubstateAAToSubstateAA();
 
 	FSM::Transition<MyClass> SubstateAAToSubstateAB;
 	bool testSubstateAAToSubstateAB();
@@ -54,6 +51,8 @@ private:
 
 	void InitializeFSM()
 	{
+		FSM_INIT(MyClass);
+
 		FSM_INIT_STATE_UPDATE(MyClass, TestA, true);
 		FSM.addChild(TestA);
 
@@ -62,22 +61,24 @@ private:
 		FSM_INIT_STATE(MyClass, SubstateAA, true);
 		TestA.addChild(SubstateAA);
 
+		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAA);
+
 		FSM_INIT_TRANSITION(MyClass, SubstateAA, SubstateAB);
 
 		FSM_INIT_INTERFACETRANSITION(MyClass, SubstateAA, MyNamedCommand, TestB);
 
 		FSM_INIT_STATE(MyClass, SubstateAB, false);
-		SubstateAA.addChild(SubstateAB);
+		TestA.addChild(SubstateAB);
 
 		FSM_INIT_TRANSITION(MyClass, SubstateAB, TestB);
 
 		FSM_INIT_STATE(MyClass, TestB, false);
-		SubstateAB.addChild(TestB);
+		FSM.addChild(TestB);
 
-		FSM_INIT_STATE(MyClass, SubstateBA, false);
+		FSM_INIT_STATE(MyClass, SubstateBA, true);
 		TestB.addChild(SubstateBA);
 
 		FSM_INIT_STATE(MyClass, SubstateBB, false);
-		SubstateBA.addChild(SubstateBB);
+		TestB.addChild(SubstateBB);
 
 	}

@@ -6,6 +6,9 @@
 #include <map>
 #include <stack>
 
+#pragma warning (push)
+#pragma warning (disable: 4100)
+
 namespace FSM {
 
 	void FSMError(const std::string &text);
@@ -565,5 +568,8 @@ namespace FSM {
 
 
 }
+
+#pragma warning (pop)
+
 
 #endif

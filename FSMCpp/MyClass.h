@@ -2,6 +2,7 @@
 #define MYCLASS_H
 
 #include "fsm_stl.h"
+#include "commands.h"
 
 class MyClass
 {

@@ -16,8 +16,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	c.status();
 
 	FSM::InterfaceParam param;
-	if(c.FSM.testCommand(MyClass::MyNamedCommand, &param))
-		c.FSM.execCommand(MyClass::MyNamedCommand, &param);
+	if(c.FSM.testCommand(InterfaceCommands::MyNamedCommand, &param))
+		c.FSM.execCommand(InterfaceCommands::MyNamedCommand, &param);
 
 
 	c.update();
