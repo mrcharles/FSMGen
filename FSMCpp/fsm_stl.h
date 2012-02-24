@@ -6,6 +6,9 @@
 #include <map>
 #include <stack>
 
+#pragma warning (push)
+#pragma warning (disable: 4100)
+
 namespace FSM {
 
 	void FSMError(const std::string &text);
@@ -46,12 +49,14 @@ namespace FSM {
 		
 	class TransitionBase
 	{
+		std::string name;
 		std::string target;
 	public:
 		TransitionBase()
 		{}
-		void init(const std::string &_target)
+		void init(const std::string &_name, const std::string &_target)
 		{
+			name = _name;
 			target = _target;
 		}
 		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL) = 0;
@@ -73,11 +78,11 @@ namespace FSM {
 		Transition()
 		{}
 
-		void init(testFunc test, execFunc exec, const std::string target)
+		void init(const std::string &_name, testFunc test, execFunc exec, const std::string target)
 		{
 			fTest = test;
 			fExec = exec;
-			TransitionBase::init(target);
+			TransitionBase::init(_name, target);
 		}
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL)
@@ -100,6 +105,7 @@ namespace FSM {
 	template <class T>
 	class InterfaceCommand : public TransitionBase
 	{
+
 		DECLARE_TYPEDEFS(T);
 	private:
 		testInterfaceFunc fTestInterface;
@@ -109,12 +115,12 @@ namespace FSM {
 
 
 	public:
-		void init(testInterfaceFunc test, execInterfaceFunc exec, int command)
+		void init(const std::string &_name, testInterfaceFunc test, execInterfaceFunc exec, int command)
 		{
 			fTestInterface = test;
 			fExecInterface = exec;
 			interfaceCommand = command;
-			TransitionBase::init("");
+			TransitionBase::init(_name, "");
 		}
 
 		virtual int getCommand()
@@ -140,13 +146,11 @@ namespace FSM {
 	template <class T> 
 	class InterfaceTransition: public InterfaceCommand<T>
 	{
-		DECLARE_TYPEDEFS(T);
-
 	public:
-		void init(testInterfaceFunc test, execInterfaceFunc exec, int command, const std::string &target)
+		void init(const std::string &_name, testInterfaceFunc test, execInterfaceFunc exec, int command, const std::string &target)
 		{
-			InterfaceCommand::init(test, exec, command);
-			TransitionBase::init(target);
+			InterfaceCommand::init(_name, test, exec, command);
+			TransitionBase::init(_name, target);
 		}
 
 	};
@@ -173,17 +177,17 @@ namespace FSM {
 //this macro uses this-> to enable pretty names for transitions. 
 #define FSM_INIT_TRANSITION( classname, statename, targetname ) \
 	this->##statename##To##targetname.setInstance(this); \
-	this->##statename##To##targetname.init( &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname); \
+	this->##statename##To##targetname.init( #statename "To" #targetname, &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname); \
 	statename.registerTransition(this->##statename##To##targetname);
 
 #define FSM_INIT_INTERFACECOMMAND( classname, statename, command ) \
 	this->##statename##On##command.setInstance(this); \
-	this->##statename##On##command.init( &##classname::test##statename##On##command, &##classname::exec##statename##On##command, InterfaceCommands::command);\
+	this->##statename##On##command.init( #statename "On" #command, &##classname::test##statename##On##command, &##classname::exec##statename##On##command, InterfaceCommands::command);\
 	statename.registerTransition(this->##statename##On##command);
 
 #define FSM_INIT_INTERFACETRANSITION( classname, statename, command, targetname ) \
 	this->##statename##To##targetname##On##command.setInstance(this); \
-	this->##statename##To##targetname##On##command.init( &##classname::test##statename##To##targetname##On##command, &##classname::exec##statename##To##targetname##On##command, InterfaceCommands::command, #targetname);\
+	this->##statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &##classname::test##statename##To##targetname##On##command, &##classname::exec##statename##To##targetname##On##command, InterfaceCommands::command, #targetname);\
 	statename.registerTransition(this->##statename##To##targetname##On##command);
 
 
@@ -467,6 +471,7 @@ namespace FSM {
 
 					if(trans->test() == InterfaceResult::Success)
 					{
+						trans->exec();
 						changeState(trans->getTarget());
 						return;
 					}
@@ -531,12 +536,19 @@ namespace FSM {
 		  
 		    State<T> *root = getCommonParent(activeParents, targetParents);
 
-			//send exits, active state up to parents
-			State<T> *exitState = activeState;
-			while( exitState != NULL && exitState != root )
+			if(activeState != targetState)
 			{
-				exitState->exit();
-				exitState = exitState->getParent();
+				//send exits, active state up to parents
+				State<T> *exitState = activeState;
+				while( exitState != NULL && exitState != root )
+				{
+					exitState->exit();
+					exitState = exitState->getParent();
+				}
+			}
+			else
+			{
+				activeState->exit();
 			}
 
 			//now we have to activate our new state, and go down the chain 
@@ -565,5 +577,8 @@ namespace FSM {
 
 
 }
+
+#pragma warning (pop)
+
 
 #endif
