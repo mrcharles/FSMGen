@@ -22,22 +22,37 @@ namespace FSMGen
 		//temp hack so we don't pop the entire parsed fsm off the stack and thus lose it.
 		Statement lastpopped;
 
-		static void InitTokensDictionary()
+        static Dictionary<string, Type> GetTokenDictionary()
+        {
+            Dictionary<string, Type> dict = new Dictionary<string,Type>(StringComparer.CurrentCultureIgnoreCase);
+            foreach (Type type in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+            {
+                foreach ( TokenAttribute token in type.GetCustomAttributes(typeof(TokenAttribute), true))
+                {
+                    System.Diagnostics.Debug.Assert(!dict.ContainsKey(token.id), "Multiple classes are flagged to handle the same token, this is not supported.");
+                    dict.Add(token.id, type);
+                }
+            }
+            return dict;
+        }
+
+        static void InitTokensDictionary()
 		{
 			if (Tokens == null)
 			{
-				Tokens = new Dictionary<string, Type>(StringComparer.CurrentCultureIgnoreCase);
+                Tokens = GetTokenDictionary();
 
-				Tokens.Add("startfsm", typeof(GlobalStatement));
-				Tokens.Add("class", typeof(ClassStatement));
-				Tokens.Add("interfacecommand", typeof(InterfaceCommandStatement));
-				Tokens.Add("state", typeof(StateStatement));
-				Tokens.Add("test", typeof(TestStatement));
-				Tokens.Add("initial", typeof(InitialStatement));
-				Tokens.Add("update", typeof(UpdateStatement));
-				Tokens.Add("transition", typeof(TransitionStatement));
-				Tokens.Add("endstate", typeof(GenericPopStatement));
-				Tokens.Add("endfsm", typeof(GenericPopStatement));
+                
+                //Tokens.Add("startfsm", typeof(GlobalStatement));
+                //Tokens.Add("class", typeof(ClassStatement));
+                //Tokens.Add("interfacecommand", typeof(InterfaceCommandStatement));
+                //Tokens.Add("state", typeof(StateStatement));
+                //Tokens.Add("test", typeof(TestStatement));
+                //Tokens.Add("initial", typeof(InitialStatement));
+                //Tokens.Add("update", typeof(UpdateStatement));
+                //Tokens.Add("transition", typeof(TransitionStatement));
+                //Tokens.Add("endstate", typeof(GenericPopStatement));
+                //Tokens.Add("endfsm", typeof(GenericPopStatement));
 
 				//tokens.Add("class", new Token() { argcount = 1, StatementType = typeof(ClassStatement) });
 				//tokens.Add("interfacecommand", new Token() { argcount = 1, StatementType = typeof(InterfaceCommandStatement) });
@@ -53,7 +68,6 @@ namespace FSMGen
 			return false;
 		}
 
-
 		public FSM(StreamReader stream)
 		{
 			InitTokensDictionary();
@@ -67,7 +81,7 @@ namespace FSMGen
                 {
                     string token = rawtokens.Dequeue();
 
-                    if (token == "")
+                    if (token == "")                                             
                         continue;
 
                     if (!IsToken(token))

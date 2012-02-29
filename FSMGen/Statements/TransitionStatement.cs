@@ -5,6 +5,7 @@ using System.Text;
 
 namespace FSMGen.Statements
 {
+    [Token("transition")]
     class TransitionStatement : Statement
     {
         public string targetstate;

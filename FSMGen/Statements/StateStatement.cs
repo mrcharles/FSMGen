@@ -6,6 +6,7 @@ using System.Text;
 namespace FSMGen.Statements
 {
 
+    [Token("state")]
     class StateStatement : NameStatement
     {
         List<Statement> statements = new List<Statement>();

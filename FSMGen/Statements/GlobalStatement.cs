@@ -5,6 +5,7 @@ using System.Text;
 
 namespace FSMGen.Statements
 {
+    [Token("startfsm")]
     class GlobalStatement : Statement
     {
         List<Statement> statements = new List<Statement>();

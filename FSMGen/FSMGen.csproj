@@ -57,6 +57,7 @@
     <Compile Include="Statements\SimpleStatements.cs" />
     <Compile Include="Statements\Statement.cs" />
     <Compile Include="Statements\StateStatement.cs" />
+    <Compile Include="Attributes\TokenAttribute.cs" />
     <Compile Include="Statements\TransitionStatement.cs" />
     <Compile Include="Visitors\BaseVisitor.cs" />
     <Compile Include="Visitors\CommandVisitor.cs" />
