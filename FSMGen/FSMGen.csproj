@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\TemplateAttribute.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="FSM.cs" />
     <Compile Include="Lang\Desc.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="Visitors\BaseVisitor.cs" />
     <Compile Include="Visitors\CommandVisitor.cs" />
     <Compile Include="Visitors\DeclarationVisitor.cs" />
+    <Compile Include="Visitors\DefinitionVisitor.cs" />
     <Compile Include="Visitors\FSMVisitor.cs" />
     <Compile Include="Visitors\GlobalCommandVisitor.cs" />
     <Compile Include="Visitors\InitializationVisitor.cs" />

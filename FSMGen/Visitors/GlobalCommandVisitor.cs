@@ -6,9 +6,11 @@ using System.IO;
 using FSMGen.Statements;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using FSMGen.Attributes;
 
 namespace FSMGen.Visitors
 {
+    [TemplateAttribute("globalcommands.template")]
     class GlobalCommandVisitor : FSMVisitor
     {
         HashSet<string> commands;

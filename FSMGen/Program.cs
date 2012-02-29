@@ -85,6 +85,13 @@ namespace FSMGen
 			writer.Flush();
 			writer.Close();
 
+            //this disgusting hack to test. it's temporary.
+            DefinitionVisitor visitor = new DefinitionVisitor(Path.Combine(path, name + ".cpp"));
+            visitor.Init();
+            fsm.AcceptVisitor(visitor);
+            visitor.End();
+
+
             return true;
 		}
 

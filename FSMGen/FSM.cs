@@ -151,6 +151,7 @@ namespace FSMGen
 			init.Init();
 			lastpopped.AcceptVisitor(init);
 			init.End();
+
 		}
 	}
 
