@@ -1,0 +1,34 @@
+﻿section: statedeclaration
+	FSM::State<%class%> %state%;
+section: stateenter
+	void onEnter%state%();
+section: stateexit
+	void onExit%state%();
+section: stateupdate
+	void update%state%(float dt);
+section: transitiondeclaration
+	FSM::Transition<%class%> %state%To%transition%;
+section: transitiontest
+	bool test%state%To%transition%();
+section: transitionexec
+	void exec%state%To%transition%();
+section: interfacecommanddeclaration
+	FSM::InterfaceCommand<%class%> %state%On%command%;
+section: interfacecommandtest
+	FSM::InterfaceResult::Enum test%state%On%command%(FSM::InterfaceParam* param);
+section: interfacecommandexec
+	void exec%state%On%command%(FSM::InterfaceParam* param);
+section: interfacetransitiondeclaration
+	FSM::InterfaceTransition<%class%> %state%To%transition%On%command%;
+section: interfacetransitiontest
+	FSM::InterfaceResult::Enum test%state%To%transition%On%command%(FSM::InterfaceParam* param);
+section: interfacetransitionexec
+	void exec%state%To%transition%On%command%(FSM::InterfaceParam* param);
+section: header
+public:
+	FSM::StateMachine<%class%> FSM;
+private:
+	void onEnterFSM();
+	void onExitFSM();
+section: main
+section: footer

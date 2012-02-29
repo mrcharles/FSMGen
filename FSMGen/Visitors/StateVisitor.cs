@@ -34,13 +34,13 @@ namespace FSMGen.Visitors
             }
             return parent;
         }
-        public override bool Valid(Statement s)
-        {
-            if (s is StateStatement || s is GenericPopStatement)
-                return true;
+        //public override bool Valid(Statement s)
+        //{
+        //    if (s is StateStatement || s is GenericPopStatement)
+        //        return true;
 
-            return base.Valid(s);
-        }
+        //    return base.Valid(s);
+        //}
 
         public override void Visit(Statement s)
         {

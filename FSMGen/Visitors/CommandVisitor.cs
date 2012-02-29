@@ -20,32 +20,23 @@ namespace FSMGen.Visitors
             stream.WriteLine("\t{");
         }
 
-        public override bool Valid(Statement s)
+        //public override bool Valid(Statement s)
+        //{
+        //    if (s is InterfaceCommandStatement)
+        //    {
+        //        return true;
+        //    }
+
+        //    return base.Valid(s);
+        //}
+
+        public virtual void VisitInterfaceCommandStatement( InterfaceCommandStatement command)
         {
-            if (s is InterfaceCommandStatement)
-            {
-                return true;
-            }
+            if (ClassName == null)
+                throw new MalformedFSMException("Encountered interfacecommand directive before class directive.", command.line);
 
-            return base.Valid(s);
-        }
-
-        public override void Visit(Statement s)
-        {
-            if (s is InterfaceCommandStatement)
-            {
-                if (ClassName == null)
-                    throw new MalformedFSMException("Encountered interfacecommand directive before class directive.", s.line);
-
-                InterfaceCommandStatement command = s as InterfaceCommandStatement;
-
-                stream.WriteLine("\t\t" + command.name + " = " + commandIndex + ",");
-                commandIndex++;
-            }
-            else
-            {
-                base.Visit(s);
-            }
+            stream.WriteLine("\t\t" + command.name + " = " + commandIndex + ",");
+            commandIndex++;
         }
 
         public override void End()

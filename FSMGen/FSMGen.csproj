@@ -46,6 +46,8 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="FSM.cs" />
+    <Compile Include="Lang\Desc.cs" />
+    <Compile Include="Lang\Template.cs" />
     <Compile Include="MalformedFSMException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -56,6 +58,7 @@
     <Compile Include="Statements\Statement.cs" />
     <Compile Include="Statements\StateStatement.cs" />
     <Compile Include="Statements\TransitionStatement.cs" />
+    <Compile Include="Visitors\BaseVisitor.cs" />
     <Compile Include="Visitors\CommandVisitor.cs" />
     <Compile Include="Visitors\DeclarationVisitor.cs" />
     <Compile Include="Visitors\FSMVisitor.cs" />
@@ -67,6 +70,10 @@
     <None Include="MyClass.fsm" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <None Include="Templates\declaration.template" />
+    <None Include="Templates\globalcommands.template" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

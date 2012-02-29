@@ -14,6 +14,9 @@ namespace FSMGen
 
         static bool ShouldExport(string file)
         {
+            if (System.Diagnostics.Debugger.IsAttached)
+                return true;
+
             string fullname = Path.GetFileName(file);
             string name = Path.GetFileNameWithoutExtension(file);
             string path = Path.GetDirectoryName(file); //Path.GetFullPath(file);

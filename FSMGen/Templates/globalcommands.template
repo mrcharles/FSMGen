@@ -1,0 +1,13 @@
+﻿section: header
+#ifndef INTERFACECOMMANDS_H
+#define INTERFACECOMMANDS_H
+namespace InterfaceCommand
+{
+	enum Enum 
+	{
+section: main
+	%command%,
+section: footer
+	};
+}
+#endif

@@ -42,28 +42,19 @@ namespace FSMGen.Visitors
             }
         }
 
-        public override bool Valid(Statement s)
+        //public override bool Valid(Statement s)
+        //{
+        //    if (s is InterfaceCommandStatement)
+        //    {
+        //        return true;
+        //    }
+
+        //    return base.Valid(s);
+        //}
+
+        public virtual void VisitInterfaceCommandStatement(InterfaceCommandStatement command)
         {
-            if (s is InterfaceCommandStatement)
-            {
-                return true;
-            }
-
-            return base.Valid(s);
-        }
-
-        public override void Visit(Statement s)
-        {
-            if (s is InterfaceCommandStatement)
-            {
-                InterfaceCommandStatement command = s as InterfaceCommandStatement;
-
-                commands.Add(command.name);
-                //stream.WriteLine("\t\t" + command.name + " = " + commandIndex + ",");
-                //commandIndex++;
-            }
-
-            base.Visit(s);
+            commands.Add(command.name);
         }
 
         public override void End()

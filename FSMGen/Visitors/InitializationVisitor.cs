@@ -22,92 +22,92 @@ namespace FSMGen.Visitors
             stream.WriteLine("\t{");
         }
 
-        public override bool Valid(Statement s)
-        {
-            if (s is ClassStatement || s is StateStatement || s is TransitionStatement || s is TestStatement)
-            {
-                return true;
-            }
+        //public override bool Valid(Statement s)
+        //{
+        //    if (s is ClassStatement || s is StateStatement || s is TransitionStatement || s is TestStatement)
+        //    {
+        //        return true;
+        //    }
 
-            return base.Valid(s);
+        //    return base.Valid(s);
+        //}
+
+        public override void VisitClassStatement(ClassStatement s)
+        {
+            base.VisitClassStatement(s);
+            stream.WriteLine("\t\tFSM_INIT(" + ClassName + ");");
+            stream.WriteLine();
+
+
         }
 
-        public override void Visit(Statement s)
+        public virtual void VisitStateStatement(StateStatement state)
         {
-            base.Visit(s);
-
             if (ClassName == null)
-                throw new MalformedFSMException("No class statement found before state implementation.", s.line);
-            if (s is ClassStatement)
+                throw new MalformedFSMException("No class statement found before state implementation.", state.line);
+            
+            bool initial = state.HasStatement(typeof(InitialStatement));
+            bool update = state.HasStatement(typeof(UpdateStatement));
+
+            string parent = null;
+
+            try
             {
-                stream.WriteLine("\t\tFSM_INIT(" + ClassName + ");");
-                stream.WriteLine();
+                parent = GetParent();
             }
-            if (s is StateStatement)
+            catch (Exception)
             {
-                StateStatement state = s as StateStatement;
-
-                bool initial = state.HasStatement(typeof(InitialStatement));
-                bool update = state.HasStatement(typeof(UpdateStatement));
-
-                string parent = null;
-
-                try
-                {
-                    parent = GetParent();
-                }
-                catch (Exception)
-                {
-                    parent = "FSM";
-                }
-
-                if (update)
-                {
-                    stream.WriteLine("\t\tFSM_INIT_STATE_UPDATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
-                }
-                else
-                {
-                    stream.WriteLine("\t\tFSM_INIT_STATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
-                }
-
-                stream.WriteLine("\t\t" + parent + ".addChild(" + state.name + ");");
-
-                stream.WriteLine();
+                parent = "FSM";
             }
-            if (s is TestStatement)
+
+            if (update)
             {
-                TestStatement test = s as TestStatement;
-                string state = GetState();
+                stream.WriteLine("\t\tFSM_INIT_STATE_UPDATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
+            }
+            else
+            {
+                stream.WriteLine("\t\tFSM_INIT_STATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
+            }
+
+            stream.WriteLine("\t\t" + parent + ".addChild(" + state.name + ");");
+
+            stream.WriteLine();
+        
+        }
+
+        public virtual void VisitTestStatement(TestStatement test)
+        {
+            string state = GetState();
+            if (state == null)
+                throw new MalformedFSMException("Interface Test found outside of state block", test.line);
+
+            stream.WriteLine("\t\tFSM_INIT_INTERFACECOMMAND(" + ClassName + ", " + GetState() + ", " + test.name + ");");
+
+            stream.WriteLine();
+
+        }
+
+        public virtual void VisitTransitionStatement(TransitionStatement transition)
+        {
+            string state = GetState();
+
+            if (transition.command == null)
+            {
                 if (state == null)
-                    throw new MalformedFSMException("Interface Test found outside of state block", s.line);
+                    throw new MalformedFSMException("Interface Transition found outside of state block", transition.line);
 
-                stream.WriteLine("\t\tFSM_INIT_INTERFACECOMMAND(" + ClassName + ", " + GetState() + ", " + test.name + ");");
-
-                stream.WriteLine();
+                stream.WriteLine("\t\tFSM_INIT_TRANSITION(" + ClassName + ", " + GetState() + ", " + transition.targetstate + ");");
             }
-            if (s is TransitionStatement)
+            else
             {
-                TransitionStatement transition = s as TransitionStatement;
+                if (state == null)
+                    throw new MalformedFSMException("Interface Command found outside of state block", transition.line);
 
-                string state = GetState();
-
-                if (transition.command == null)
-                {
-                    if (state == null)
-                        throw new MalformedFSMException("Interface Transition found outside of state block", s.line);
-
-                    stream.WriteLine("\t\tFSM_INIT_TRANSITION(" + ClassName + ", " + GetState() + ", " + transition.targetstate + ");");
-                }
-                else
-                {
-                    if (state == null)
-                        throw new MalformedFSMException("Interface Command found outside of state block", s.line);
-
-                    stream.WriteLine("\t\tFSM_INIT_INTERFACETRANSITION(" + ClassName + ", " + GetState() + ", " + transition.command + ", " + transition.targetstate + ");");
-                }
-
-                stream.WriteLine();
+                stream.WriteLine("\t\tFSM_INIT_INTERFACETRANSITION(" + ClassName + ", " + GetState() + ", " + transition.command + ", " + transition.targetstate + ");");
             }
+
+            stream.WriteLine();
+        
         }
 
         public override void End()

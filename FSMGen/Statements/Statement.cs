@@ -31,10 +31,8 @@ namespace FSMGen.Statements
 
         public void AcceptVisitor(FSMVisitor visitor)
         {
-            if (visitor.Valid(this))
-            {
-                visitor.Visit(this);
-            }
+            visitor.Visit(this);
+
             if (Statements() != null)
             {
                 foreach (Statement s in Statements())
