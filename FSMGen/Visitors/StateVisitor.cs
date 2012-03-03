@@ -11,8 +11,8 @@ namespace FSMGen.Visitors
     {
         Stack<string> statenames = new Stack<string>();
 
-        public StateVisitor(StreamWriter stream)
-            : base(stream)
+        public StateVisitor(Config config, FSMFile file)
+            : base(config, file)
         {
 
         }
@@ -42,27 +42,21 @@ namespace FSMGen.Visitors
         //    return base.Valid(s);
         //}
 
-        public override void Visit(Statement s)
+        public virtual void VisitStateStatement(StateStatement state)
         {
-            if (s is StateStatement)
-            {
-                StateStatement state = s as StateStatement;
-                statenames.Push(state.name);
-            }
-            if (s is GenericPopStatement)
-            {
-                try
-                {
-                    statenames.Pop();
-                }
-                catch (Exception)
-                {
-                    throw new MalformedFSMException("Unexpected EOF. Unterminated state declaration?", s.line);
-                }
-            }
-
-            base.Visit(s);
+            statenames.Push(state.name);
         }
 
+        public virtual void VisitGenericPopStatement(GenericPopStatement s)
+        {
+            try
+            {
+                statenames.Pop();
+            }
+            catch (Exception)
+            {
+                throw new MalformedFSMException("Unexpected EOF. Unterminated state declaration?", s.line);
+            }
+        }
     }
 }

@@ -14,12 +14,12 @@ namespace FSMGen.Visitors
     class GlobalCommandVisitor : FSMVisitor
     {
         HashSet<string> commands;
-        string dbfile;
+        //string dbfile;
 
-        public GlobalCommandVisitor(string outputfile, string _dbfile)
-            : base(new StreamWriter(outputfile))
+        public GlobalCommandVisitor(Config config, FSMFile file)
+            : base(config, file)
         {
-            dbfile = _dbfile;
+            //dbfile = _dbfile;
         }
 
         public override void Init()
@@ -28,7 +28,7 @@ namespace FSMGen.Visitors
             Stream stream = null;
             try
             {
-                stream = File.Open(dbfile, FileMode.Open);
+                stream = File.Open(config.CommandsDB, FileMode.Open);
                 IFormatter formatter = new BinaryFormatter();
 
                 commands = formatter.Deserialize(stream) as HashSet<string>;
@@ -63,11 +63,13 @@ namespace FSMGen.Visitors
         {
             //save out the hashset
 
-            Stream dbstream = File.Open(dbfile, FileMode.Create);
+            Stream dbstream = File.Open(config.CommandsDB, FileMode.Create);
             IFormatter formatter = new BinaryFormatter();
 
             formatter.Serialize(dbstream, commands);
             dbstream.Close();
+
+            StreamWriter stream = new StreamWriter(config.CommandsHeader, false);
 
             stream.WriteLine("#ifndef INTERFACECOMMANDS_H");
             stream.WriteLine("#define INTERFACECOMMANDS_H");

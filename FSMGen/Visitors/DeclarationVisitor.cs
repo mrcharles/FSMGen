@@ -9,15 +9,23 @@ namespace FSMGen.Visitors
 {
     class DeclarationVisitor : StateVisitor
     {
-        ConfigData data;
-        public DeclarationVisitor(StreamWriter stream, ConfigData _data)
-            : base(stream)
+        StreamWriter stream;
+
+        public DeclarationVisitor(Config config, FSMFile file)
+            : base(config, file)
         {
-            data = _data;
+        }
+        ~DeclarationVisitor()
+        {
+            if (stream != null)
+                stream.Dispose();
         }
 
         public override void Init()
         {
+            stream = new StreamWriter(fsmfile.ImplementationFile, false);
+            stream.AutoFlush = false;
+
             stream.WriteLine("public:");
         }
 
@@ -42,8 +50,10 @@ namespace FSMGen.Visitors
             stream.WriteLine();
         }
 
-        public virtual void VisitStateStatement(StateStatement state)
+        public override void VisitStateStatement(StateStatement state)
         {
+            base.VisitStateStatement(state);
+
             if (ClassName == null)
                 throw new MalformedFSMException("No class statement found before state implementation.", state.line);
 
@@ -96,7 +106,8 @@ namespace FSMGen.Visitors
 
         public override void End()
         {
-            //throw new NotImplementedException();
+            stream.Flush();
+            stream.Close();
         }
     }
 }

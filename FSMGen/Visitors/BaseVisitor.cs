@@ -10,13 +10,15 @@ namespace FSMGen.Visitors
 {
     abstract class BaseVisitor
     { 
-        protected StreamWriter stream;
-        public BaseVisitor(StreamWriter _stream)
+        protected Config config;
+        protected FSMFile fsmfile;
+        public BaseVisitor(Config _config, FSMFile _file)
         {
-            stream = _stream;
+            config = _config;
+            fsmfile = _file;
         }
         public abstract void Init();
-        public virtual void Visit(Statement s)
+        public void Visit(Statement s)
         {
             string statementtypename = s.GetType().Name;
 

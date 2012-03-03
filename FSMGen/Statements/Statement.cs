@@ -29,7 +29,7 @@ namespace FSMGen.Statements
             return false;
         }
 
-        public void AcceptVisitor(FSMVisitor visitor)
+        public void AcceptVisitor(BaseVisitor visitor)
         {
             visitor.Visit(this);
 
@@ -41,6 +41,5 @@ namespace FSMGen.Statements
                 }
             }
         }
-
     }
 }

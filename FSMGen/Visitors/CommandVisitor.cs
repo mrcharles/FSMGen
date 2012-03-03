@@ -10,11 +10,22 @@ namespace FSMGen.Visitors
     class CommandsVisitor : FSMVisitor
     {
         int commandIndex = 0;
-        public CommandsVisitor(StreamWriter _stream)
-            : base(_stream)
+        StreamWriter stream;
+
+        public CommandsVisitor(Config config, FSMFile file)
+            : base(config, file)
         { }
+        ~CommandsVisitor()
+        {
+            if (stream != null)
+                stream.Dispose();
+        }
+
         public override void Init()
         {
+            stream = new StreamWriter(fsmfile.ImplementationFile);
+            stream.AutoFlush = false;
+
             stream.WriteLine("public:");
             stream.WriteLine("\tenum InterfaceCommands");
             stream.WriteLine("\t{");
@@ -44,6 +55,10 @@ namespace FSMGen.Visitors
             stream.WriteLine("\t};");
             stream.WriteLine();
             stream.WriteLine();
+
+            stream.Flush();
+            stream.Close();
+            stream = null;
         }
     }
 }

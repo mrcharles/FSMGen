@@ -13,18 +13,12 @@ namespace FSMGen.Visitors
         string cpp;
 
         FileStream cppfile;
+        StreamWriter stream;
 
-        public DefinitionVisitor( FileStream _cppfile )
-            : base( new StreamWriter(_cppfile) )
+        public DefinitionVisitor( Config config, FSMFile file )
+            : base( config, file )
         {
-            cppfile = _cppfile;
-        }
-
-        public DefinitionVisitor(string outputfile)
-            : this( new FileStream( outputfile, FileMode.OpenOrCreate, FileAccess.ReadWrite ) )
-        {
-            //it's probably better to build a regex to parse out all function names to check against as a hashset.
-            //but for now, this is easy.
+            cppfile = new FileStream(file.DefinitionFile, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             cpp = new StreamReader(cppfile).ReadToEnd();
         }
 
@@ -32,20 +26,17 @@ namespace FSMGen.Visitors
         {
         }
 
-        bool firstexport = true; //<---- gross
-
         void PrintFunc( string ret, string funcdef, string param, string retstatement="", string lame="")
         {
             if (!cpp.Contains(funcdef))
             {
-                if (firstexport)
+                if (stream == null)
                 {
+                    stream = new StreamWriter(cppfile);
                     stream.WriteLine("////////////////////////////////////////////////////////////////////////////////////");
                     stream.WriteLine("////////////////////////////////////////////////////////////////////////////////////");
                     stream.WriteLine("////////////////////////////////////////////////////////////////////////////////////");
                     stream.WriteLine();
-
-                    firstexport = false;
                 }
                 stream.WriteLine(ret + " " + funcdef + param);
                 stream.WriteLine("{");
@@ -58,8 +49,9 @@ namespace FSMGen.Visitors
         }
 
 
-        public virtual void VisitStateStatement(StateStatement state)
+        public override void VisitStateStatement(StateStatement state)
         {
+            base.VisitStateStatement(state);
             //make string "ClassName::onEnterStateName" to search CPP 
             PrintFunc("void", ClassName + "::onEnter" + state.name, "()");
 
@@ -95,7 +87,7 @@ namespace FSMGen.Visitors
         public override void End()
         {
             stream.Flush();
-            stream.Dispose();
+            stream.Close();
             cppfile.Close();
         }
     }

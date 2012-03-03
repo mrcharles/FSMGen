@@ -36,19 +36,14 @@ namespace FSMGen
             return false;
         }
 
-		static bool ProcessFile(string file, FSMVisitor specialVisitor = null)
+		static bool ProcessFile(string file)
 		{
-			string fullname = Path.GetFileName(file);
-			string name = Path.GetFileNameWithoutExtension(file);
-            string path = Path.GetDirectoryName(file); //Path.GetFullPath(file);
-            string outputfilename = Path.Combine(path, name + ".fsm.h");
-
-			StreamReader reader = new StreamReader(file);
+            FSMFile fsmfile = new FSMFile(file, config);
 
 			FSM fsm = null;
 			try
 			{
-				fsm = new FSM(reader);
+				fsm = new FSM(fsmfile);
 			}
 			catch (MalformedFSMException e)
 			{
@@ -56,41 +51,17 @@ namespace FSMGen
                 Console.WriteLine(file + "(" + e.line + ") : error : " + e.Message);
 				return false;
 			}
-			finally
-			{
-				reader.Close();
-			}
 
-            if (specialVisitor != null)
-            {
-                fsm.AcceptVisitor(specialVisitor);
-            }
-
-
-			//the generated filename needs to be defined by info parsed from the .fsm file. TODO with language def.
-			//or maybe fsm.Export can return a file name.
-			StreamWriter writer = new StreamWriter(outputfilename, false);
-			writer.AutoFlush = false;
 			try
 			{
-				fsm.Export(writer, config);
+				fsm.Export(config);
 			}
 			catch (MalformedFSMException e)
 			{
 				//MessageBox.Show(e.Message, "FSMGen Failed:" + fullname);
                 Console.WriteLine(file + "(" + e.line + ") : error : " + e.Message);
-                writer.Dispose();
 				return false;
 			}
-			writer.Flush();
-			writer.Close();
-
-            //this disgusting hack to test. it's temporary.
-            DefinitionVisitor visitor = new DefinitionVisitor(Path.Combine(path, name + ".cpp"));
-            visitor.Init();
-            fsm.AcceptVisitor(visitor);
-            visitor.End();
-
 
             return true;
 		}
@@ -113,18 +84,8 @@ namespace FSMGen
 
                 if (ShouldExport(args[arg]))
                 {
-                    GlobalCommandVisitor commands = null;
-                    if (config.UseGlobalCommands)
-                    {
-                        commands = new GlobalCommandVisitor(config.CommandsHeader, config.CommandsDB);
-                        commands.Init();
-                    }
-
-                    if (!ProcessFile(args[arg], commands))
+                    if (!ProcessFile(args[arg]))
                         Environment.Exit(1);
-
-                    if(commands != null)
-                        commands.End();
                 }
             }
 

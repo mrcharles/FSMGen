@@ -47,6 +47,7 @@
     <Compile Include="Attributes\TemplateAttribute.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="FSM.cs" />
+    <Compile Include="FSMFile.cs" />
     <Compile Include="Lang\Desc.cs" />
     <Compile Include="Lang\Template.cs" />
     <Compile Include="MalformedFSMException.cs" />
