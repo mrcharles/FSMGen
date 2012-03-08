@@ -10,9 +10,9 @@ namespace FSMGen
     {
         Config config;
         
-        public string fullname;
-        public string name;
-        public string path;
+        string fullname;
+        string name;
+        string path;
 
         public FSMFile(string file, Config _config)
         {
@@ -20,6 +20,14 @@ namespace FSMGen
             name = Path.GetFileNameWithoutExtension(file);
             path = Path.GetDirectoryName(file);
             config = _config;
+        }
+
+        public string SourceFile
+        {
+            get
+            {
+                return Path.Combine(path, fullname);
+            }
         }
 
         public string DefinitionFile

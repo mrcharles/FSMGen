@@ -82,6 +82,19 @@ namespace FSMGen.Visitors
             stream.WriteLine();
         }
 
+        public virtual void VisitDenyStatement(DenyStatement test)
+        {
+            string state = GetState();
+            if (state == null)
+                throw new MalformedFSMException("Interface Command found outside of state block", test.line);
+
+            string transName = state + "On" + test.name;
+
+            stream.WriteLine("\tFSM::InterfaceCommandDeny<" + ClassName + "> " + transName + ";");
+
+            stream.WriteLine();
+        }
+
         public virtual void VisitTransitionStatement(TransitionStatement transition)
         {
             string state = GetState();

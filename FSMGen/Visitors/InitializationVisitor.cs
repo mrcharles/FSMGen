@@ -96,6 +96,18 @@ namespace FSMGen.Visitors
 
         }
 
+        public virtual void VisitDenyStatement(DenyStatement test)
+        {
+            string state = GetState();
+            if (state == null)
+                throw new MalformedFSMException("Interface Test Deny found outside of state block", test.line);
+
+            stream.WriteLine("\t\tFSM_INIT_INTERFACEDENY(" + ClassName + ", " + GetState() + ", " + test.name + ");");
+
+            stream.WriteLine();
+
+        }
+
         public virtual void VisitTransitionStatement(TransitionStatement transition)
         {
             string state = GetState();

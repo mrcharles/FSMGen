@@ -75,7 +75,7 @@ namespace FSMGen
             file = _file;
 			InitTokensDictionary();
 
-            StreamReader stream = new StreamReader(file.fullname);
+            StreamReader stream = new StreamReader(file.SourceFile);
 
             try
             {

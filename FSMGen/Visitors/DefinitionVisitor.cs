@@ -86,8 +86,11 @@ namespace FSMGen.Visitors
 
         public override void End()
         {
-            stream.Flush();
-            stream.Close();
+            if (stream != null)
+            {
+                stream.Flush();
+                stream.Close();
+            }
             cppfile.Close();
         }
     }

@@ -143,6 +143,25 @@ namespace FSM {
 
 	};
 
+	template <class T>
+	class InterfaceCommandDeny : public InterfaceCommand<T>
+	{
+	public:
+		void init( const std::string &_name, int command )
+		{
+			InterfaceCommand<T>::init(_name, NULL, NULL, command);
+		}
+
+		virtual InterfaceResult::Enum test(InterfaceParam* param)
+		{
+			return InterfaceResult::Failed;
+		}
+		virtual void exec(InterfaceParam* param )
+		{
+		}
+
+	};
+
 	template <class T> 
 	class InterfaceTransition: public InterfaceCommand<T>
 	{
@@ -183,6 +202,11 @@ namespace FSM {
 #define FSM_INIT_INTERFACECOMMAND( classname, statename, command ) \
 	this->##statename##On##command.setInstance(this); \
 	this->##statename##On##command.init( #statename "On" #command, &##classname::test##statename##On##command, &##classname::exec##statename##On##command, InterfaceCommands::command);\
+	statename.registerTransition(this->##statename##On##command);
+
+#define FSM_INIT_INTERFACEDENY( classname, statename, command ) \
+	this->##statename##On##command.setInstance(this); \
+	this->##statename##On##command.init( #statename "On" #command, InterfaceCommands::command);\
 	statename.registerTransition(this->##statename##On##command);
 
 #define FSM_INIT_INTERFACETRANSITION( classname, statename, command, targetname ) \
@@ -381,7 +405,7 @@ namespace FSM {
 
 		}
 
-		bool testCommand(int command, FSM::InterfaceParam *param)
+		InterfaceResult::Enum testCommand(int command, FSM::InterfaceParam *param)
 		{
 			FSMAssert(command >= 0, "interface commands must be greater than zero");
 
@@ -400,18 +424,18 @@ namespace FSM {
 					{
 						InterfaceResult::Enum result = trans->test(param);
 						if(result == InterfaceResult::Failed)
-							return false;
+							return InterfaceResult::Failed;
 						if(result == InterfaceResult::Success)
 						{
 							testedTransition = trans;
-							return true;
+							return InterfaceResult::Success;
 						}
 					}
 				}
 				state = state->getParent();
 
 			}
-			return false;
+			return InterfaceResult::Unhandled;
 		}
 
 		void execCommand(int command, FSM::InterfaceParam *param)

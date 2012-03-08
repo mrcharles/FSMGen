@@ -11,6 +11,13 @@ namespace FSMGen.Statements
     {
         List<Statement> statements = new List<Statement>();
 
+        //[TemplateToken("state")]
+        public string State
+        {
+            get
+            { return name; }
+        }
+
         public override List<Statement> Statements()
         {
             return statements;

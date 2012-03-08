@@ -29,6 +29,12 @@ namespace FSMGen.Statements
 
     }
 
+    [Token("deny")]
+    class DenyStatement : NameStatement
+    {
+    
+    }
+
     [Token("endstate")]
     [Token("endfsm")]
     class GenericPopStatement : Statement
