@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using FSMGen.Statements;
+using FSMGen.Attributes;
 
 namespace FSMGen.Visitors
 {
@@ -91,6 +92,19 @@ namespace FSMGen.Visitors
             string transName = state + "On" + test.name;
 
             stream.WriteLine("\tFSM::InterfaceCommandDeny<" + ClassName + "> " + transName + ";");
+
+            stream.WriteLine();
+        }
+
+        public virtual void VisitAllowStatement(AllowStatement test)
+        {
+            string state = GetState();
+            if (state == null)
+                throw new MalformedFSMException("Interface Command found outside of state block", test.line);
+
+            string transName = state + "On" + test.name;
+
+            stream.WriteLine("\tFSM::InterfaceCommandAllow<" + ClassName + "> " + transName + ";");
 
             stream.WriteLine();
         }

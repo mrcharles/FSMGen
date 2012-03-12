@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 
 namespace FSMGen.Attributes
-{                       
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = true, Inherited = true )]
-    class TokenAttribute : System.Attribute
+{
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    class ModifierAttribute : Attribute
     {
         public string id { get; set; }
-        public TokenAttribute(string id)
+        public ModifierAttribute(string id)
         {
             this.id = id;
         }

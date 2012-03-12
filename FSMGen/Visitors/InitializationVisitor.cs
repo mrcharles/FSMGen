@@ -108,6 +108,18 @@ namespace FSMGen.Visitors
 
         }
 
+        public virtual void VisitAllowStatement(AllowStatement test)
+        {
+            string state = GetState();
+            if (state == null)
+                throw new MalformedFSMException("Interface Test Allow found outside of state block", test.line);
+
+            stream.WriteLine("\t\tFSM_INIT_INTERFACEALLOW(" + ClassName + ", " + GetState() + ", " + test.name + ");");
+
+            stream.WriteLine();
+
+        }
+
         public virtual void VisitTransitionStatement(TransitionStatement transition)
         {
             string state = GetState();

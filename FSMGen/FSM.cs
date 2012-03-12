@@ -6,6 +6,7 @@ using System.IO;
 
 using FSMGen.Visitors;
 using FSMGen.Statements;
+using FSMGen.Attributes;
 
 namespace FSMGen
 {
