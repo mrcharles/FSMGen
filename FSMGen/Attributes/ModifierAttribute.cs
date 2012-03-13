@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FSMGen.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Property, Inherited = true)]
     class ModifierAttribute : Attribute
     {
         public string id { get; set; }

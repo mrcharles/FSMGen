@@ -7,19 +7,19 @@ using FSMGen.Attributes;
 namespace FSMGen.Statements
 {
     [Token("transition")]
-    [Modifier("allow")]
-    [Modifier("noexec")]
     class TransitionStatement : Statement
     {
         public string targetstate;
         public string command;
 
+        [Modifier("allow")]
         public bool Allow
         {
             get;
             set;
         }
 
+        [Modifier("noexec")]
         public bool NoExec
         {
             get;
@@ -29,6 +29,7 @@ namespace FSMGen.Statements
 
         public override void Consume(Queue<string> tokens)
         {
+            base.Consume(tokens);
             if (FSM.IsToken(tokens.Peek()))
                 throw new MalformedFSMException("Unexpected token " + tokens.Peek() + ", expected identifier or interface command.", line);
 

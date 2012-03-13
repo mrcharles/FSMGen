@@ -10,6 +10,8 @@ namespace FSMGen.Statements
         public string name;
         public override void Consume(Queue<string> tokens)
         {
+            base.Consume(tokens);
+
             if (FSM.IsToken(tokens.Peek()))
             {
                 throw new MalformedFSMException("Unexpected token: " + tokens.Peek() + ", expected identifier.", line);

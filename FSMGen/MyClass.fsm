@@ -11,7 +11,7 @@ state TestA
 	test MyNamedCommand
 	state SubstateAA
 		initial
-		transition SubstateAB
+		transition +noexec SubstateAB
 		transition MyNamedCommand TestB
 	endstate
 	state SubstateAB

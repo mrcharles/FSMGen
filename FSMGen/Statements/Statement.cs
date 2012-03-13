@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Reflection;
 using FSMGen.Visitors;
+using FSMGen.Attributes;
+
 
 namespace FSMGen.Statements
 {
@@ -11,7 +14,29 @@ namespace FSMGen.Statements
         public FSM owner;
         public int line;
 
-        public virtual void Consume(Queue<string> tokens) { }
+        public virtual void Consume(Queue<string> tokens) 
+        {
+            if (tokens.Count <= 0)
+                return;
+            while (tokens.Peek().StartsWith("+"))
+                HandleModifier(tokens.Dequeue());
+        }
+        public void HandleModifier(string _modifier)
+        {
+            string modifier = _modifier.Trim().TrimStart(new char[] { '+' });
+            foreach (PropertyInfo prop in GetType().GetProperties())
+            {
+                foreach (ModifierAttribute mod in prop.GetCustomAttributes(typeof(ModifierAttribute), true))
+                {
+                    if (mod.id == modifier)
+                    {
+                        MethodInfo method = prop.GetSetMethod();
+
+                        method.Invoke(this, new object[] { true });
+                    }
+                }
+            }
+        }
         public virtual bool ShouldPush() { return false; }
         public virtual bool ShouldPop() { return false; }
         public virtual List<Statement> Statements() { return null; }
