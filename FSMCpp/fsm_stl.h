@@ -29,7 +29,6 @@ namespace FSM {
 	
 	};
 
-	template <class T>
 	class State;
 
 #define DECLARE_TYPEDEFS(T) \
@@ -162,6 +161,25 @@ namespace FSM {
 
 	};
 
+	template <class T>
+	class InterfaceCommandAllow : public InterfaceCommand<T>
+	{
+	public:
+		void init( const std::string &_name, int command )
+		{
+			InterfaceCommand<T>::init(_name, NULL, NULL, command);
+		}
+
+		virtual InterfaceResult::Enum test(InterfaceParam* param)
+		{
+			return InterfaceResult::Success;
+		}
+		virtual void exec(InterfaceParam* param )
+		{
+		}
+
+	};
+
 	template <class T> 
 	class InterfaceTransition: public InterfaceCommand<T>
 	{
@@ -174,23 +192,71 @@ namespace FSM {
 
 	};
 
-#define FSM_DECLARE( classname ) \
-	FSM::StateMachine<classname> FSM; \
-	void onEnterFSM(); \
-	void onExitFSM();
+	class StateDelegate
+	{
+	public:
+		virtual void onEnter() = 0;
+		virtual void onExit() = 0;
+		virtual void onUpdate(float dt) = 0;
+	};
 
-#define FSM_INIT( classname ) \
-	FSM.setInstance(this); \
-	FSM.init( & ##classname::onEnterFSM, & ##classname::onExitFSM );
+	template <class T>
+	class StateDelegateT : public StateDelegate
+	{
+	public:
+		typedef void(T::*voidFunc)();	  
+		typedef void(T::*updateFunc)(float dt);	
+
+	private:
+		voidFunc enter;
+		voidFunc exit;
+		updateFunc update;
+		T* instance;
+
+	public:
+		StateDelegateT()
+		{
+			enter = NULL;
+			exit = NULL;
+			update = NULL;
+			instance = NULL;
+		}
+	
+		void init( T* _instance, voidFunc _enter, voidFunc _exit, updateFunc _update)
+		{
+			enter = _enter;
+			exit = _exit;
+			update = _update;
+			instance = _instance;
+		}
+		virtual void onEnter()
+		{
+			if(enter)
+				(instance->*enter)();
+		}
+		virtual void onExit()
+		{
+			if(exit)
+				(instance->*exit)();
+		}
+		virtual void onUpdate(float dt)
+		{
+			if(update)
+				(instance->*update)(dt);
+		}
+	};
+
+#define FSM_INIT( ) \
+	FSM.init( &FSMDelegate );
 
 #define FSM_INIT_STATE_UPDATE( classname, statename, initial) \
-	statename.setInstance(this);\
-	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename); \
+	statename##Delegate.init( this, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename ); \
+	statename.init(#statename, initial, & statename##Delegate); \
 	FSM.registerState(statename);
 
 #define FSM_INIT_STATE( classname, statename, initial) \
-	statename.setInstance(this);\
-	statename.init(#statename, initial, & ##classname::onEnter##statename, & ##classname::onExit##statename);\
+	statename##Delegate.init( this, & ##classname::onEnter##statename, & ##classname::onExit##statename, NULL ); \
+	statename.init(#statename, initial, & statename##Delegate); \
 	FSM.registerState(statename);
 
 //this macro uses this-> to enable pretty names for transitions. 
@@ -209,27 +275,34 @@ namespace FSM {
 	this->##statename##On##command.init( #statename "On" #command, InterfaceCommands::command);\
 	statename.registerTransition(this->##statename##On##command);
 
+#define FSM_INIT_INTERFACEALLOW( classname, statename, command ) \
+	this->##statename##On##command.setInstance(this); \
+	this->##statename##On##command.init( #statename "On" #command, InterfaceCommands::command);\
+	statename.registerTransition(this->##statename##On##command);
+
 #define FSM_INIT_INTERFACETRANSITION( classname, statename, command, targetname ) \
 	this->##statename##To##targetname##On##command.setInstance(this); \
 	this->##statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &##classname::test##statename##To##targetname##On##command, &##classname::exec##statename##To##targetname##On##command, InterfaceCommands::command, #targetname);\
 	statename.registerTransition(this->##statename##To##targetname##On##command);
 
 
-	template <class T>
+	//template <class T>
 	class State
 	{
-		DECLARE_TYPEDEFS(T);
+		//DECLARE_TYPEDEFS(T);
 
 	protected:
 		//state static data
 		std::string name;
 
 	private:
-		std::vector<State<T> *> children;
-		State<T>* parent;
-		onEnterFunc onEnter;
-		onEnterFunc onExit;
-		updateFunc onUpdate;
+		std::vector<State *> children;
+		State* parent;
+		//onEnterFunc onEnter;
+		//onEnterFunc onExit;
+		//updateFunc onUpdate;
+		
+		StateDelegate* delegate;
 		std::vector<TransitionBase* > transitions;
 
 	public:
@@ -239,20 +312,18 @@ namespace FSM {
 	public:	
 		State()
 		{
-			init("", false, NULL, NULL);
+			init("", false, NULL);
 		}
-		State(std::string _name, bool _initial, onEnterFunc _onEnter, onExitFunc _onExit, updateFunc _update = NULL) 
+		State(std::string _name, bool _initial, StateDelegate* _delegate) 
 		{
-			init(_name, _initial, _onEnter, _onExit, _update);
+			init(_name, _initial, _delegate);
 		}
 		
-		void init(std::string _name, bool _initial, onEnterFunc _onEnter, onExitFunc _onExit, updateFunc _update = NULL)
+		void init(std::string _name, bool _initial, StateDelegate* _delegate)
 		{
 			name = _name;
 			initial = _initial;
-			onEnter = _onEnter;
-			onExit = _onExit;
-			onUpdate = _update;
+			delegate = _delegate;
 			active = false;
 			parent = NULL;
 		}
@@ -272,24 +343,24 @@ namespace FSM {
 			return transitions;
 		}
 
-		void addChild( State<T>& child )
+		void addChild( State& child )
 		{
 			child.parent = this;
 			children.push_back(& child);
 		}
 
-		State<T>* getActiveChild()
+		State* getActiveChild()
 		{
-			for( std::vector<State<T>*>::const_iterator it = children.begin(); it != children.end(); ++it )
+			for( std::vector<State*>::const_iterator it = children.begin(); it != children.end(); ++it )
 			{
-				State<T>* state = *it;
+				State* state = *it;
 				if(state->active)
 					return state;
 			}
 			return NULL;
 		}
 
-		State<T>* getInitialChild()
+		State* getInitialChild()
 		{
 			//if there's only one child it is implicitly initial. 
 			if( children.size() == 1)
@@ -297,9 +368,9 @@ namespace FSM {
 
 			if( children.size() > 0)
 			{
-				for( std::vector<State<T>*>::const_iterator it = children.begin(); it != children.end(); ++it )
+				for( std::vector<State*>::const_iterator it = children.begin(); it != children.end(); ++it )
 				{
-					State<T>* state = *it;
+					State* state = *it;
 					if(state->initial)
 						return state;
 				}
@@ -309,14 +380,14 @@ namespace FSM {
 			return NULL;
 		}
 		
-		State<T>* getParent()
+		State* getParent()
 		{
 			return parent;
 		}
 
-		void getParents(std::stack< State<T>* > &parents)
+		void getParents(std::stack< State* > &parents)
 		{
-			State<T> *state = parent;
+			State *state = parent;
 
 			while(state != NULL)
 			{
@@ -327,21 +398,18 @@ namespace FSM {
 
 		void update(float dt)
 		{
-			if(onUpdate)
-				(_instance->*onUpdate)(dt);
+			delegate->onUpdate(dt);
 		}
 
 		void exit()
 		{
-			if(onExit)
-				(_instance->*onExit)();
+			delegate->onExit();
 			active = false;
 		}
 
 		void enter()
 		{
-			if(onEnter)
-				(_instance->*onEnter)();
+			delegate->onEnter();
 			active = true;
 		}
 
@@ -352,9 +420,9 @@ namespace FSM {
 			{
 				bool bFoundInitial = false;
 
-				for( std::vector<State<T> *>::const_iterator it = children.begin(); it != children.end(); ++it)
+				for( std::vector<State *>::const_iterator it = children.begin(); it != children.end(); ++it)
 				{
-					State<T> *state = *it;
+					State *state = *it;
 
 					if(bFoundInitial && state->initial)
 					{
@@ -382,20 +450,19 @@ namespace FSM {
 
 	};
 
-   template <class T>
-	class StateMachine : public State<T>
+	class StateMachine : public State
 	{
 		//DECLARE_TYPEDEFS(T);
 
-		std::map<std::string, State<T>*> states;
-		State<T>* activeState;
+		std::map<std::string, State*> states;
+		State* activeState;
 		TransitionBase* testedTransition;
 							
 	public:
-		void init( onEnterFunc enter, onExitFunc exit)
+		void init( StateDelegate* _delegate)
 			
 		{
-			State::init("_super", true, enter, exit);
+			State::init("_super", true, _delegate);
 			activeState = NULL;
 		}
 
@@ -410,7 +477,7 @@ namespace FSM {
 			FSMAssert(command >= 0, "interface commands must be greater than zero");
 
 			//run the test from leafmost up
-			State<T> *state = activeState;
+			State *state = activeState;
 
 			while(state != NULL)
 			{
@@ -448,7 +515,7 @@ namespace FSM {
 			testedTransition = NULL;
 		}
 
-		void registerState(State<T>& state)
+		void registerState(State& state)
 		{
 			states[state.getName()] = &state;
 		}
@@ -458,7 +525,7 @@ namespace FSM {
 			return getState(name) != NULL;
 		}
 
-		State<T>* getState(const std::string &name)
+		State* getState(const std::string &name)
 		{
 			return states[name];
 		}
@@ -474,8 +541,8 @@ namespace FSM {
 
 			//update each active state. 
 			//right now, states update from top down
-			State<T> *state = getActiveChild();
-			State<T> *leafmost = NULL;
+			State *state = getActiveChild();
+			State *leafmost = NULL;
 			while( state != NULL )
 			{
 				state->update(dt);
@@ -515,10 +582,10 @@ namespace FSM {
 
 	protected:
 
-		State<T>* getCommonParent(State<T>* stateA, State<T>* stateB)
+		State* getCommonParent(State* stateA, State* stateB)
 		{
-		   std::stack< State<T>* > parentsA;
-		   std::stack< State<T>* > parentsB;
+		   std::stack< State* > parentsA;
+		   std::stack< State* > parentsB;
 
 		   stateA->getParents(parentsA);
 		   stateB->getParents(parentsB);
@@ -526,12 +593,12 @@ namespace FSM {
 		   return getCommonParent(parentsA, parentsB);
 		}
 
-		State<T>* getCommonParent(std::stack< State<T>* > &parentsA, std::stack< State<T>* > &parentsB)
+		State* getCommonParent(std::stack< State* > &parentsA, std::stack< State* > &parentsB)
 		{
-			State<T> * parentA = parentsA.top();
-			State<T> * parentB = parentsB.top();
+			State * parentA = parentsA.top();
+			State * parentB = parentsB.top();
 
-			State<T> * common = NULL;
+			State * common = NULL;
 
 			while( parentA == parentB && parentA != NULL && parentB != NULL )
 			{
@@ -550,20 +617,20 @@ namespace FSM {
 
 		void changeState(const std::string& name)
 		{
-			State<T> *targetState = getState(name);
+			State *targetState = getState(name);
 			FSMAssert(targetState != NULL, "target state for state change not found.");
-			std::stack< State<T>* > activeParents;
-			std::stack< State<T>* > targetParents;
+			std::stack< State* > activeParents;
+			std::stack< State* > targetParents;
 
 			activeState->getParents(activeParents);
 			targetState->getParents(targetParents);
 		  
-		    State<T> *root = getCommonParent(activeParents, targetParents);
+		    State *root = getCommonParent(activeParents, targetParents);
 
 			if(activeState != targetState)
 			{
 				//send exits, active state up to parents
-				State<T> *exitState = activeState;
+				State *exitState = activeState;
 				while( exitState != NULL && exitState != root )
 				{
 					exitState->exit();
@@ -584,9 +651,9 @@ namespace FSM {
 
 		}
 
-		void activateState(State<T>* state)
+		void activateState(State* state)
 		{
-			State<T> *enterState = state;
+			State *enterState = state;
 			while(enterState != NULL)
 			{
 				FSMAssert(!enterState->active, "Trying to activate an already active state.");

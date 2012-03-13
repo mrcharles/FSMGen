@@ -44,7 +44,8 @@ namespace FSMGen.Visitors
         {
             base.VisitClassStatement(s);
 
-            stream.WriteLine("\tFSM::StateMachine<" + ClassName + "> FSM;");
+            stream.WriteLine("\tFSM::StateDelegateT<" + ClassName + "> FSMDelegate;");
+            stream.WriteLine("\tFSM::StateMachine FSM;");
             stream.WriteLine("private:");
             stream.WriteLine("\tvoid onEnterFSM();");
             stream.WriteLine("\tvoid onExitFSM();");
@@ -58,7 +59,8 @@ namespace FSMGen.Visitors
             if (ClassName == null)
                 throw new MalformedFSMException("No class statement found before state implementation.", state.line);
 
-            stream.WriteLine("\tFSM::State<" + ClassName + "> " + state.name + ";");
+            stream.WriteLine("\tFSM::StateDelegateT<" + ClassName + "> " + state.name + "Delegate;");
+            stream.WriteLine("\tFSM::State " + state.name + ";");
             stream.WriteLine("\tvoid onEnter" + state.name + "();");
             stream.WriteLine("\tvoid onExit" + state.name + "();");
             if (state.HasStatement(typeof(UpdateStatement)))

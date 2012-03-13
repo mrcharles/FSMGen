@@ -43,7 +43,7 @@ namespace FSMGen.Visitors
         public override void VisitClassStatement(ClassStatement s)
         {
             base.VisitClassStatement(s);
-            stream.WriteLine("\t\tFSM_INIT(" + ClassName + ");");
+            stream.WriteLine("\t\tFSM_INIT();");
             stream.WriteLine();
 
 
