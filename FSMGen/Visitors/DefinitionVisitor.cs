@@ -67,20 +67,25 @@ namespace FSMGen.Visitors
         public virtual void VisitTestStatement(TestStatement test)
         {
             PrintFunc("InterfaceResult::Enum", ClassName + "::test" + GetState() + "On" + test.name, "(InterfaceParam* param)", "\treturn InterfaceResult::Unhandled;", "\tparam;");
-            PrintFunc("void", ClassName + "::exec" + GetState() + "On" + test.name, "(InterfaceParam* param)", "\tparam;");
+            if( !test.NoExec)
+                PrintFunc("void", ClassName + "::exec" + GetState() + "On" + test.name, "(InterfaceParam* param)", "\tparam;");
         }
 
         public virtual void VisitTransitionStatement(TransitionStatement transition)
         {
             if (transition.command == null)
             {
-                PrintFunc("bool", ClassName + "::test" + GetState() + "To" + transition.targetstate, "()", "\treturn false;");
-                PrintFunc("void", ClassName + "::exec" + GetState() + "To" + transition.targetstate, "()");
+                if( !transition.Allow && !transition.Deny)
+                    PrintFunc("bool", ClassName + "::test" + GetState() + "To" + transition.targetstate, "()", "\treturn false;");
+                if( !transition.NoExec)
+                    PrintFunc("void", ClassName + "::exec" + GetState() + "To" + transition.targetstate, "()");
             }
             else
             {
-                PrintFunc("InterfaceResult::Enum", ClassName + "::test" + GetState() + "To" + transition.targetstate + "On" + transition.command, "(InterfaceParam* param)", "\treturn InterfaceResult::Unhandled;", "\tparam;");
-                PrintFunc("void", ClassName + "::exec" + GetState() + "To" + transition.targetstate + "On" + transition.command, "(InterfaceParam* param)", "\tparam;");
+                if (!transition.Allow && !transition.Deny)
+                    PrintFunc("InterfaceResult::Enum", ClassName + "::test" + GetState() + "To" + transition.targetstate + "On" + transition.command, "(InterfaceParam* param)", "\treturn InterfaceResult::Unhandled;", "\tparam;");
+                if (!transition.NoExec)
+                    PrintFunc("void", ClassName + "::exec" + GetState() + "To" + transition.targetstate + "On" + transition.command, "(InterfaceParam* param)", "\tparam;");
             }
         }
 

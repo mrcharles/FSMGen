@@ -90,7 +90,10 @@ namespace FSMGen.Visitors
             if (state == null)
                 throw new MalformedFSMException("Interface Test found outside of state block", test.line);
 
-            stream.WriteLine("\t\tFSM_INIT_INTERFACECOMMAND(" + ClassName + ", " + GetState() + ", " + test.name + ");");
+            if(test.NoExec)
+                stream.WriteLine("\t\tFSM_INIT_INTERFACECOMMAND_NOEXEC(" + ClassName + ", " + GetState() + ", " + test.name + ");");
+            else
+                stream.WriteLine("\t\tFSM_INIT_INTERFACECOMMAND(" + ClassName + ", " + GetState() + ", " + test.name + ");");
 
             stream.WriteLine();
 
@@ -129,14 +132,20 @@ namespace FSMGen.Visitors
                 if (state == null)
                     throw new MalformedFSMException("Interface Transition found outside of state block", transition.line);
 
-                stream.WriteLine("\t\tFSM_INIT_TRANSITION(" + ClassName + ", " + GetState() + ", " + transition.targetstate + ");");
+                if(transition.NoExec)
+                    stream.WriteLine("\t\tFSM_INIT_TRANSITION_NOEXEC(" + ClassName + ", " + GetState() + ", " + transition.targetstate + ");");
+                else
+                    stream.WriteLine("\t\tFSM_INIT_TRANSITION(" + ClassName + ", " + GetState() + ", " + transition.targetstate + ");");
             }
             else
             {
                 if (state == null)
                     throw new MalformedFSMException("Interface Command found outside of state block", transition.line);
 
-                stream.WriteLine("\t\tFSM_INIT_INTERFACETRANSITION(" + ClassName + ", " + GetState() + ", " + transition.command + ", " + transition.targetstate + ");");
+                if(transition.NoExec)
+                    stream.WriteLine("\t\tFSM_INIT_INTERFACETRANSITION_NOEXEC(" + ClassName + ", " + GetState() + ", " + transition.command + ", " + transition.targetstate + ");");
+                else
+                    stream.WriteLine("\t\tFSM_INIT_INTERFACETRANSITION(" + ClassName + ", " + GetState() + ", " + transition.command + ", " + transition.targetstate + ");");
             }
 
             stream.WriteLine();

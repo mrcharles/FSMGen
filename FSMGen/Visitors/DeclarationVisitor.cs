@@ -81,7 +81,9 @@ namespace FSMGen.Visitors
             stream.WriteLine("\tFSM::InterfaceCommand<" + ClassName + "> " + transName + ";");
 
             stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param);");
-            stream.WriteLine("\tvoid exec" + transName + "(FSM::InterfaceParam* param);");
+
+            if(!test.NoExec)
+                stream.WriteLine("\tvoid exec" + transName + "(FSM::InterfaceParam* param);");
             stream.WriteLine();
         }
 
@@ -120,15 +122,28 @@ namespace FSMGen.Visitors
             {
                 string transName = state + "To" + transition.targetstate + "On" + transition.command;
                 stream.WriteLine("\tFSM::InterfaceTransition<" + ClassName + "> " + transName + ";");
-                stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param);");
-                stream.WriteLine("\tvoid exec" + state + "To" + transition.targetstate + "On" + transition.command + "(FSM::InterfaceParam* param);");
+                if(transition.Allow)
+                    stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param) { param; return FSM::InterfaceResult::Success; }");
+                else if(transition.Deny)
+                    stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param) { param; return FSM::InterfaceResult::Failed; }");
+                else
+                    stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param);");
+                if(!transition.NoExec)
+                    stream.WriteLine("\tvoid exec" + state + "To" + transition.targetstate + "On" + transition.command + "(FSM::InterfaceParam* param);");
             }
             else
             {
                 string transName = state + "To" + transition.targetstate;
                 stream.WriteLine("\tFSM::Transition<" + ClassName + "> " + transName + ";");
-                stream.WriteLine("\tbool test" + transName + "();");
-                stream.WriteLine("\tvoid exec" + transName + "();");
+                
+                if(transition.Allow)
+                    stream.WriteLine("\tbool test" + transName + "() { return true; }");
+                else if(transition.Deny)
+                    stream.WriteLine("\tbool test" + transName + "() { return false }");
+                else
+                    stream.WriteLine("\tbool test" + transName + "();");
+                if (!transition.NoExec)
+                    stream.WriteLine("\tvoid exec" + transName + "();");
             }
             stream.WriteLine();
         }

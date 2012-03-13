@@ -24,6 +24,7 @@ namespace FSMGen.Statements
         public void HandleModifier(string _modifier)
         {
             string modifier = _modifier.Trim().TrimStart(new char[] { '+' });
+            bool handled = false;
             foreach (PropertyInfo prop in GetType().GetProperties())
             {
                 foreach (ModifierAttribute mod in prop.GetCustomAttributes(typeof(ModifierAttribute), true))
@@ -33,9 +34,13 @@ namespace FSMGen.Statements
                         MethodInfo method = prop.GetSetMethod();
 
                         method.Invoke(this, new object[] { true });
+                        handled = true;
                     }
                 }
             }
+
+            if (!handled)
+                throw new MalformedFSMException("Encountered invalid statement modifier \"" + _modifier + "\"", line);
         }
         public virtual bool ShouldPush() { return false; }
         public virtual bool ShouldPop() { return false; }

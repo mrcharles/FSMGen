@@ -19,6 +19,13 @@ namespace FSMGen.Statements
             set;
         }
 
+        [Modifier("deny")]
+        public bool Deny
+        {
+            get;
+            set;
+        }
+
         [Modifier("noexec")]
         public bool NoExec
         {

@@ -97,7 +97,8 @@ namespace FSM {
 		}
 		virtual void exec(InterfaceParam* param = NULL)
 		{
-			(_instance->*fExec)();
+			if(fExec != NULL)
+				(_instance->*fExec)();
 		}
 	};
 
@@ -137,7 +138,8 @@ namespace FSM {
 		}
 		virtual void exec(InterfaceParam* param )
 		{
-			(_instance->*fExecInterface)(param);
+			if(fExecInterface != NULL)
+				(_instance->*fExecInterface)(param);
 		}
 
 	};
@@ -265,9 +267,19 @@ namespace FSM {
 	this->##statename##To##targetname.init( #statename "To" #targetname, &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname); \
 	statename.registerTransition(this->##statename##To##targetname);
 
+#define FSM_INIT_TRANSITION_NOEXEC( classname, statename, targetname ) \
+	this->##statename##To##targetname.setInstance(this); \
+	this->##statename##To##targetname.init( #statename "To" #targetname, &##classname::test##statename##To##targetname, NULL, #targetname); \
+	statename.registerTransition(this->##statename##To##targetname);
+
 #define FSM_INIT_INTERFACECOMMAND( classname, statename, command ) \
 	this->##statename##On##command.setInstance(this); \
 	this->##statename##On##command.init( #statename "On" #command, &##classname::test##statename##On##command, &##classname::exec##statename##On##command, InterfaceCommands::command);\
+	statename.registerTransition(this->##statename##On##command);
+
+#define FSM_INIT_INTERFACECOMMAND_NOEXEC( classname, statename, command ) \
+	this->##statename##On##command.setInstance(this); \
+	this->##statename##On##command.init( #statename "On" #command, &##classname::test##statename##On##command, NULL, InterfaceCommands::command);\
 	statename.registerTransition(this->##statename##On##command);
 
 #define FSM_INIT_INTERFACEDENY( classname, statename, command ) \
@@ -285,6 +297,10 @@ namespace FSM {
 	this->##statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &##classname::test##statename##To##targetname##On##command, &##classname::exec##statename##To##targetname##On##command, InterfaceCommands::command, #targetname);\
 	statename.registerTransition(this->##statename##To##targetname##On##command);
 
+#define FSM_INIT_INTERFACETRANSITION_NOEXEC( classname, statename, command, targetname ) \
+	this->##statename##To##targetname##On##command.setInstance(this); \
+	this->##statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &##classname::test##statename##To##targetname##On##command, NULL, InterfaceCommands::command, #targetname);\
+	statename.registerTransition(this->##statename##To##targetname##On##command);
 
 	//template <class T>
 	class State

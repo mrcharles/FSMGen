@@ -27,6 +27,12 @@ namespace FSMGen.Statements
     [Token("test")]
     class TestStatement : NameStatement
     {
+        [Modifier("noexec")]
+        public bool NoExec
+        {
+            get;
+            set;
+        }
 
     }
 
