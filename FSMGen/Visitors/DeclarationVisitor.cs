@@ -61,8 +61,10 @@ namespace FSMGen.Visitors
 
             stream.WriteLine("\tFSM::StateDelegateT<" + ClassName + "> " + state.name + "Delegate;");
             stream.WriteLine("\tFSM::State " + state.name + ";");
-            stream.WriteLine("\tvoid onEnter" + state.name + "();");
-            stream.WriteLine("\tvoid onExit" + state.name + "();");
+            if(!state.NoEnter)
+                stream.WriteLine("\tvoid onEnter" + state.name + "();");
+            if(!state.NoExit)
+                stream.WriteLine("\tvoid onExit" + state.name + "();");
             if (state.HasStatement(typeof(UpdateStatement)))
             {
                 stream.WriteLine("\tvoid update" + state.name + "(float dt);");

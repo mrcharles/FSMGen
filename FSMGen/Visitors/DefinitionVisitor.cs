@@ -53,10 +53,12 @@ namespace FSMGen.Visitors
         {
             base.VisitStateStatement(state);
             //make string "ClassName::onEnterStateName" to search CPP 
-            PrintFunc("void", ClassName + "::onEnter" + state.name, "()");
+            if(!state.NoEnter)
+                PrintFunc("void", ClassName + "::onEnter" + state.name, "()");
 
             //make string "ClassName::onExitStateName" to search CPP 
-            PrintFunc("void", ClassName + "::onExit" + state.name, "()");
+            if (!state.NoExit)
+                PrintFunc("void", ClassName + "::onExit" + state.name, "()");
 
             if (state.HasStatement(typeof(UpdateStatement)))
             {

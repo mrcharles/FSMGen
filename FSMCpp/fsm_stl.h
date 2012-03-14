@@ -251,13 +251,15 @@ namespace FSM {
 #define FSM_INIT( ) \
 	FSM.init( &FSMDelegate );
 
+#define FSM_INIT_STATE
+
 #define FSM_INIT_STATE_UPDATE( classname, statename, initial) \
 	statename##Delegate.init( this, & ##classname::onEnter##statename, & ##classname::onExit##statename, & ##classname::update##statename ); \
 	statename.init(#statename, initial, & statename##Delegate); \
 	FSM.registerState(statename);
 
-#define FSM_INIT_STATE( classname, statename, initial) \
-	statename##Delegate.init( this, & ##classname::onEnter##statename, & ##classname::onExit##statename, NULL ); \
+#define FSM_INIT_STATE_EXPLICIT( statename, initial, enter, exit, update) \
+	statename##Delegate.init( this, enter, exit, update ); \
 	statename.init(#statename, initial, & statename##Delegate); \
 	FSM.registerState(statename);
 

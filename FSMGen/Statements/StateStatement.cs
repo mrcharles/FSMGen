@@ -12,6 +12,20 @@ namespace FSMGen.Statements
     {
         List<Statement> statements = new List<Statement>();
 
+        [Modifier("noenter")]
+        public bool NoEnter
+        {
+            get;
+            set;
+        }
+
+        [Modifier("noexit")]
+        public bool NoExit
+        {
+            get;
+            set;
+        }
+
         //[TemplateToken("state")]
         public string State
         {

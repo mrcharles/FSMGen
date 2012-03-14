@@ -69,14 +69,20 @@ namespace FSMGen.Visitors
                 parent = "FSM";
             }
 
-            if (update)
-            {
-                stream.WriteLine("\t\tFSM_INIT_STATE_UPDATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
-            }
-            else
-            {
-                stream.WriteLine("\t\tFSM_INIT_STATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
-            }
+            stream.WriteLine("\t\tFSM_INIT_STATE_EXPLICIT(" + state.name + ", " + 
+                (initial ? "true, " : "false, ") +
+                (state.NoEnter ? "NULL, " : "&" + ClassName + "::onEnter"+state.name+ ", ") +
+                (state.NoExit ? "NULL, " : "&" + ClassName + "::onExit" + state.name + ", ") +
+                (!update ? "NULL" : "&" + ClassName + "::update" + state.name) +
+                ");");
+            //if (update)
+            //{
+            //    stream.WriteLine("\t\tFSM_INIT_STATE_UPDATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
+            //}
+            //else
+            //{
+            //    stream.WriteLine("\t\tFSM_INIT_STATE(" + ClassName + ", " + state.name + ", " + (initial ? "true" : "false") + ");");
+            //}
 
             stream.WriteLine("\t\t" + parent + ".addChild(" + state.name + ");");
 
