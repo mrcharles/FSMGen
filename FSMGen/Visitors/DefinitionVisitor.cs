@@ -28,7 +28,8 @@ namespace FSMGen.Visitors
 
         void PrintFunc( string ret, string funcdef, string param, string retstatement="", string lame="")
         {
-            if (!cpp.Contains(funcdef))
+            string test = funcdef + "(";
+            if (!cpp.Contains(test))
             {
                 if (stream == null)
                 {
