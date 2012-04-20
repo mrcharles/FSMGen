@@ -125,9 +125,9 @@ namespace FSMGen.Visitors
                 string transName = state + "To" + transition.targetstate + "On" + transition.command;
                 stream.WriteLine("\tFSM::InterfaceTransition<" + ClassName + "> " + transName + ";");
                 if(transition.Allow)
-                    stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param) { param; return FSM::InterfaceResult::Success; }");
+                    stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param) { (void)param; return FSM::InterfaceResult::Success; }");
                 else if(transition.Deny)
-                    stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param) { param; return FSM::InterfaceResult::Failed; }");
+                    stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param) { (void)param; return FSM::InterfaceResult::Failed; }");
                 else
                     stream.WriteLine("\tFSM::InterfaceResult::Enum test" + transName + "(FSM::InterfaceParam* param);");
                 if(!transition.NoExec)
