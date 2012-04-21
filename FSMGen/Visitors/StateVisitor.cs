@@ -7,7 +7,7 @@ using FSMGen.Statements;
 
 namespace FSMGen.Visitors
 {
-    abstract class StateVisitor : FSMVisitor
+    public abstract class StateVisitor : FSMVisitor
     {
         Stack<string> statenames = new Stack<string>();
 

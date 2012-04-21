@@ -7,7 +7,7 @@ using FSMGen.Attributes;
 namespace FSMGen.Statements
 {
     [Token("transition")]
-    class TransitionStatement : Statement
+    public class TransitionStatement : Statement
     {
         public string targetstate;
         public string command;

@@ -5,8 +5,8 @@ using System.Text;
 
 namespace FSMGen.Attributes
 {                       
-    [AttributeUsage( AttributeTargets.Class, AllowMultiple = true, Inherited = true )]
-    class TokenAttribute : System.Attribute
+    [AttributeUsage( AttributeTargets.Class, AllowMultiple = true, Inherited = false )]
+    public class TokenAttribute : System.Attribute
     {
         public string id { get; set; }
         public TokenAttribute(string id)

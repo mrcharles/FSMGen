@@ -7,7 +7,7 @@ using FSMGen.Statements;
 
 namespace FSMGen.Visitors
 {
-    class InitializationVisitor : StateVisitor
+    public class InitializationVisitor : StateVisitor
     {
         StreamWriter stream;
 

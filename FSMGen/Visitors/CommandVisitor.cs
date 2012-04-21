@@ -7,7 +7,7 @@ using FSMGen.Statements;
 
 namespace FSMGen.Visitors
 {
-    class CommandsVisitor : FSMVisitor
+    public class CommandsVisitor : FSMVisitor
     {
         int commandIndex = 0;
         StreamWriter stream;

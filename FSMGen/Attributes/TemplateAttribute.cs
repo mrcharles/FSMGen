@@ -6,7 +6,7 @@ using System.Text;
 namespace FSMGen.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = true)]
-    class TemplateAttribute : System.Attribute
+    public class TemplateAttribute : System.Attribute
     {
         public string name { get; set; }
         public TemplateAttribute(string name)

@@ -7,25 +7,25 @@ using FSMGen.Attributes;
 namespace FSMGen.Statements
 {
     [Token("class")]
-    class ClassStatement : NameStatement
+    public class ClassStatement : NameStatement
     {
 
     }
 
     [Token("initial")]
-    class InitialStatement : Statement
+    public class InitialStatement : Statement
     {
 
     }
 
     [Token("update")]
-    class UpdateStatement : Statement
+    public class UpdateStatement : Statement
     {
 
     }
 
     [Token("test")]
-    class TestStatement : NameStatement
+    public class TestStatement : NameStatement
     {
         [Modifier("noexec")]
         public bool NoExec
@@ -36,21 +36,22 @@ namespace FSMGen.Statements
 
     }
 
+
     [Token("deny")]
-    class DenyStatement : NameStatement
+    public class DenyStatement : NameStatement
     {
     
     }
 
     [Token("allow")]
-    class AllowStatement : NameStatement
+    public class AllowStatement : NameStatement
     { 
     
     }
 
     [Token("endstate")]
     [Token("endfsm")]
-    class GenericPopStatement : Statement
+    public class GenericPopStatement : Statement
     {
         public override bool ShouldPop()
         {

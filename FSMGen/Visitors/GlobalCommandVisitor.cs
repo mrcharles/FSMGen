@@ -11,7 +11,7 @@ using FSMGen.Attributes;
 namespace FSMGen.Visitors
 {
     [TemplateAttribute("globalcommands.template")]
-    class GlobalCommandVisitor : FSMVisitor
+    public class GlobalCommandVisitor : FSMVisitor
     {
         HashSet<string> commands;
         //string dbfile;

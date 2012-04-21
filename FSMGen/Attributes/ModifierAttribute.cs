@@ -6,7 +6,7 @@ using System.Text;
 namespace FSMGen.Attributes
 {
     [AttributeUsage(AttributeTargets.Property, Inherited = true)]
-    class ModifierAttribute : Attribute
+    public class ModifierAttribute : Attribute
     {
         public string id { get; set; }
         public ModifierAttribute(string id)

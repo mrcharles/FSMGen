@@ -8,7 +8,7 @@ using FSMGen.Attributes;
 namespace FSMGen.Statements
 {
     [Token("interfacecommand")]
-    class InterfaceCommandStatement : NameStatement
+    public class InterfaceCommandStatement : NameStatement
     {
         public override void Consume(Queue<string> tokens)
         {

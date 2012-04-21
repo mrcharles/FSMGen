@@ -6,7 +6,7 @@ using System.IO;
 
 namespace FSMGen
 {
-    class FSMFile
+    public class FSMFile
     {
         Config config;
         

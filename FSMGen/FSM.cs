@@ -11,7 +11,7 @@ using FSMGen.Attributes;
 namespace FSMGen
 {
 
-	class FSM
+	public class FSM
 	{
 		Queue<string> rawtokens;
 		//string [] rawtokens;
@@ -30,7 +30,7 @@ namespace FSMGen
             Dictionary<string, Type> dict = new Dictionary<string,Type>(StringComparer.CurrentCultureIgnoreCase);
             foreach (Type type in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
             {
-                foreach ( TokenAttribute token in type.GetCustomAttributes(typeof(TokenAttribute), true))
+                foreach ( TokenAttribute token in type.GetCustomAttributes(typeof(TokenAttribute), false))
                 {
                     System.Diagnostics.Debug.Assert(!dict.ContainsKey(token.id), "Multiple classes are flagged to handle the same token, this is not supported.");
                     dict.Add(token.id, type);

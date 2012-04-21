@@ -9,7 +9,7 @@ using FSMGen.Attributes;
 
 namespace FSMGen.Statements
 {
-    abstract class Statement
+    public abstract class Statement
     {
         public FSM owner;
         public int line;

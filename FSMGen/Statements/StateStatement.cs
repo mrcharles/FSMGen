@@ -8,7 +8,7 @@ namespace FSMGen.Statements
 {
 
     [Token("state")]
-    class StateStatement : NameStatement
+    public class StateStatement : NameStatement
     {
         List<Statement> statements = new List<Statement>();
 

@@ -8,7 +8,7 @@ using FSMGen.Attributes;
 namespace FSMGen.Statements
 {
     [Token("startfsm")]
-    class GlobalStatement : Statement
+    public class GlobalStatement : Statement
     {
         List<Statement> statements = new List<Statement>();
 

@@ -8,7 +8,7 @@ using FSMGen.Statements;
 
 namespace FSMGen.Visitors
 {
-    class DefinitionVisitor : StateVisitor
+    public class DefinitionVisitor : StateVisitor
     {
         string cpp;
 

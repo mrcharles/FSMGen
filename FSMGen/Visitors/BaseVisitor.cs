@@ -8,7 +8,7 @@ using FSMGen.Statements;
 
 namespace FSMGen.Visitors
 {
-    abstract class BaseVisitor
+    public abstract class BaseVisitor
     { 
         protected Config config;
         protected FSMFile fsmfile;

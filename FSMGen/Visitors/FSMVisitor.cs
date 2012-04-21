@@ -7,7 +7,7 @@ using FSMGen.Statements;
 
 namespace FSMGen.Visitors
 {
-    abstract class FSMVisitor : BaseVisitor
+    public abstract class FSMVisitor : BaseVisitor
     {
         public string ClassName = null;
 

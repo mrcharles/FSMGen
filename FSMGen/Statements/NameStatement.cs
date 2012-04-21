@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FSMGen.Statements
 {
-    abstract class NameStatement : Statement
+    public abstract class NameStatement : Statement
     {
         public string name;
         public override void Consume(Queue<string> tokens)

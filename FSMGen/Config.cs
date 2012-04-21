@@ -30,7 +30,7 @@ namespace FSMGen
 
     }
 
-    class Config
+    public class Config
     {
         ConfigData data;
         string configFile;
