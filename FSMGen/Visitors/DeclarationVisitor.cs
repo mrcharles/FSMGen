@@ -46,6 +46,8 @@ namespace FSMGen.Visitors
 
             stream.WriteLine("\tFSM::StateDelegateT<" + ClassName + "> FSMDelegate;");
             stream.WriteLine("\tFSM::StateMachine FSM;");
+            stream.WriteLine("protected:");
+            stream.WriteLine("\tvirtual FSM::StateMachine* getFSM() { return &FSM; }");
             stream.WriteLine("private:");
             stream.WriteLine("\tvoid onEnterFSM();");
             stream.WriteLine("\tvoid onExitFSM();");

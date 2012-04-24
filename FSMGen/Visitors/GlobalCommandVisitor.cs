@@ -72,7 +72,7 @@ namespace FSMGen.Visitors
             StreamWriter stream = new StreamWriter(config.CommandsHeader, false);
 
             stream.WriteLine("#ifndef INTERFACECOMMANDS_H");
-            stream.WriteLine("#define INTERFACECOMMANDS_H");
+            stream.WriteLine("#define INTERFACECOMMANDS_H 0");
             stream.WriteLine();
             stream.WriteLine("namespace InterfaceCommands");
             stream.WriteLine("{");
