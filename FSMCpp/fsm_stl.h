@@ -6,8 +6,10 @@
 #include <map>
 #include <stack>
 
+#ifdef _WIN32
 #pragma warning (push)
 #pragma warning (disable: 4100)
+#endif
 
 namespace FSM {
 
@@ -45,6 +47,15 @@ namespace FSM {
 		void setInstance( T* instance ) \
 			{ _instance = instance; } 	
 	
+#define DECLARE_TYPEDEFS_ONLY(T) \
+	protected: \
+		typedef void(T::*onEnterFunc)(); \
+		typedef void(T::*onExitFunc)();	  \
+		typedef void(T::*updateFunc)(float dt);	\
+		typedef bool(T::*testFunc)();		 \
+		typedef InterfaceResult::Enum (T::*testInterfaceFunc)( InterfaceParam* param );	\
+		typedef void(T::*execInterfaceFunc)( InterfaceParam* param );				 \
+		typedef void(T::*execFunc)();
 		
 	class TransitionBase
 	{
@@ -53,6 +64,7 @@ namespace FSM {
 	public:
 		TransitionBase()
 		{}
+		virtual ~TransitionBase(){}
 		void init(const std::string &_name, const std::string &_target)
 		{
 			name = _name;
@@ -77,11 +89,11 @@ namespace FSM {
 		Transition()
 		{}
 
-		void init(const std::string &_name, testFunc test, execFunc exec, const std::string target)
+		void init(const std::string &_name, testFunc _test, execFunc _exec, const std::string _target)
 		{
-			fTest = test;
-			fExec = exec;
-			TransitionBase::init(_name, target);
+			fTest = _test;
+			fExec = _exec;
+			TransitionBase::init(_name, _target);
 		}
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param = NULL)
@@ -97,6 +109,7 @@ namespace FSM {
 		}
 		virtual void exec(InterfaceParam* param = NULL)
 		{
+			(void)param;
 			if(fExec != NULL)
 				(_instance->*fExec)();
 		}
@@ -115,11 +128,11 @@ namespace FSM {
 
 
 	public:
-		void init(const std::string &_name, testInterfaceFunc test, execInterfaceFunc exec, int command)
+		void init(const std::string &_name, testInterfaceFunc _test, execInterfaceFunc _exec, int _command)
 		{
-			fTestInterface = test;
-			fExecInterface = exec;
-			interfaceCommand = command;
+			fTestInterface = _test;
+			fExecInterface = _exec;
+			interfaceCommand = _command;
 			TransitionBase::init(_name, "");
 		}
 
@@ -155,10 +168,12 @@ namespace FSM {
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param)
 		{
+			(void)param;
 			return InterfaceResult::Failed;
 		}
 		virtual void exec(InterfaceParam* param )
 		{
+			(void)param;
 		}
 
 	};
@@ -185,11 +200,12 @@ namespace FSM {
 	template <class T> 
 	class InterfaceTransition: public InterfaceCommand<T>
 	{
+		DECLARE_TYPEDEFS_ONLY(T)
 	public:
-		void init(const std::string &_name, testInterfaceFunc test, execInterfaceFunc exec, int command, const std::string &target)
+		void init(const std::string &_name, testInterfaceFunc _test, execInterfaceFunc _exec, int _command, const std::string &_target)
 		{
-			InterfaceCommand::init(_name, test, exec, command);
-			TransitionBase::init(_name, target);
+			InterfaceCommand<T>::init(_name, _test, _exec, _command);
+			TransitionBase::init(_name, _target);
 		}
 
 	};
@@ -197,6 +213,7 @@ namespace FSM {
 	class StateDelegate
 	{
 	public:
+		virtual ~StateDelegate(){}
 		virtual void onEnter() = 0;
 		virtual void onExit() = 0;
 		virtual void onUpdate(float dt) = 0;
@@ -223,6 +240,8 @@ namespace FSM {
 			update = NULL;
 			instance = NULL;
 		}
+
+		virtual ~StateDelegateT(){}
 	
 		void init( T* _instance, voidFunc _enter, voidFunc _exit, updateFunc _update)
 		{
@@ -265,44 +284,44 @@ namespace FSM {
 
 //this macro uses this-> to enable pretty names for transitions. 
 #define FSM_INIT_TRANSITION( classname, statename, targetname ) \
-	this->##statename##To##targetname.setInstance(this); \
-	this->##statename##To##targetname.init( #statename "To" #targetname, &##classname::test##statename##To##targetname, &##classname::exec##statename##To##targetname, #targetname); \
-	statename.registerTransition(this->##statename##To##targetname);
+	this->statename##To##targetname.setInstance(this); \
+	this->statename##To##targetname.init( #statename "To" #targetname, &classname::test##statename##To##targetname, &classname::exec##statename##To##targetname, #targetname); \
+	statename.registerTransition(this->statename##To##targetname);
 
 #define FSM_INIT_TRANSITION_NOEXEC( classname, statename, targetname ) \
-	this->##statename##To##targetname.setInstance(this); \
-	this->##statename##To##targetname.init( #statename "To" #targetname, &##classname::test##statename##To##targetname, NULL, #targetname); \
-	statename.registerTransition(this->##statename##To##targetname);
+	this->statename##To##targetname.setInstance(this); \
+	this->statename##To##targetname.init( #statename "To" #targetname, &classname::test##statename##To##targetname, NULL, #targetname); \
+	statename.registerTransition(this->statename##To##targetname);
 
 #define FSM_INIT_INTERFACECOMMAND( classname, statename, command ) \
-	this->##statename##On##command.setInstance(this); \
-	this->##statename##On##command.init( #statename "On" #command, &##classname::test##statename##On##command, &##classname::exec##statename##On##command, InterfaceCommands::command);\
-	statename.registerTransition(this->##statename##On##command);
+	this->statename##On##command.setInstance(this); \
+	this->statename##On##command.init( #statename "On" #command, &classname::test##statename##On##command, &classname::exec##statename##On##command, InterfaceCommands::command);\
+	statename.registerTransition(this->statename##On##command);
 
 #define FSM_INIT_INTERFACECOMMAND_NOEXEC( classname, statename, command ) \
-	this->##statename##On##command.setInstance(this); \
-	this->##statename##On##command.init( #statename "On" #command, &##classname::test##statename##On##command, NULL, InterfaceCommands::command);\
-	statename.registerTransition(this->##statename##On##command);
+	this->statename##On##command.setInstance(this); \
+	this->statename##On##command.init( #statename "On" #command, &classname::test##statename##On##command, NULL, InterfaceCommands::command);\
+	statename.registerTransition(this->statename##On##command);
 
 #define FSM_INIT_INTERFACEDENY( classname, statename, command ) \
-	this->##statename##On##command.setInstance(this); \
-	this->##statename##On##command.init( #statename "On" #command, InterfaceCommands::command);\
-	statename.registerTransition(this->##statename##On##command);
+	this->statename##On##command.setInstance(this); \
+	this->statename##On##command.init( #statename "On" #command, InterfaceCommands::command);\
+	statename.registerTransition(this->statename##On##command);
 
 #define FSM_INIT_INTERFACEALLOW( classname, statename, command ) \
-	this->##statename##On##command.setInstance(this); \
-	this->##statename##On##command.init( #statename "On" #command, InterfaceCommands::command);\
-	statename.registerTransition(this->##statename##On##command);
+	this->statename##On##command.setInstance(this); \
+	this->statename##On##command.init( #statename "On" #command, InterfaceCommands::command);\
+	statename.registerTransition(this->statename##On##command);
 
 #define FSM_INIT_INTERFACETRANSITION( classname, statename, command, targetname ) \
-	this->##statename##To##targetname##On##command.setInstance(this); \
-	this->##statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &##classname::test##statename##To##targetname##On##command, &##classname::exec##statename##To##targetname##On##command, InterfaceCommands::command, #targetname);\
-	statename.registerTransition(this->##statename##To##targetname##On##command);
+	this->statename##To##targetname##On##command.setInstance(this); \
+	this->statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &classname::test##statename##To##targetname##On##command, &classname::exec##statename##To##targetname##On##command, InterfaceCommands::command, #targetname);\
+	statename.registerTransition(this->statename##To##targetname##On##command);
 
 #define FSM_INIT_INTERFACETRANSITION_NOEXEC( classname, statename, command, targetname ) \
-	this->##statename##To##targetname##On##command.setInstance(this); \
-	this->##statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &##classname::test##statename##To##targetname##On##command, NULL, InterfaceCommands::command, #targetname);\
-	statename.registerTransition(this->##statename##To##targetname##On##command);
+	this->statename##To##targetname##On##command.setInstance(this); \
+	this->statename##To##targetname##On##command.init( #statename "To" #targetname "On" #command, &classname::test##statename##To##targetname##On##command, NULL, InterfaceCommands::command, #targetname);\
+	statename.registerTransition(this->statename##To##targetname##On##command);
 
 	//template <class T>
 	class State
@@ -475,19 +494,33 @@ namespace FSM {
 		std::map<std::string, State*> states;
 		State* activeState;
 		TransitionBase* testedTransition;
-							
+		bool updating;		
+		bool activating;
+		std::string queuedStateChange;
+		float timeInState;
+
 	public:
 		void init( StateDelegate* _delegate)
 			
 		{
 			State::init("_super", true, _delegate);
 			activeState = NULL;
+			updating = false;
+			activating = false;
+			timeInState = 0.0f;
 		}
 
 		void status()
 		{
 			printf("Current State is %s.\n", activeState->getName().c_str());
 
+		}
+
+		float getTimeInState() { return timeInState; }
+
+		const std::string& getActiveStateName()
+		{
+			return activeState->getName();
 		}
 
 		InterfaceResult::Enum testCommand(int command, FSM::InterfaceParam *param)
@@ -499,9 +532,9 @@ namespace FSM {
 
 			while(state != NULL)
 			{
-				std::vector<TransitionBase*> transitions = state->getTransitions();
-				for( std::vector<TransitionBase*>::const_iterator it = transitions.begin();
-					 it != transitions.end();
+				std::vector<TransitionBase*> transitionsVector = state->getTransitions();
+				for( std::vector<TransitionBase*>::const_iterator it = transitionsVector.begin();
+					 it != transitionsVector.end();
 					 ++it )
 				{
 					TransitionBase * trans = *it;
@@ -525,6 +558,7 @@ namespace FSM {
 
 		void execCommand(int command, FSM::InterfaceParam *param)
 		{
+			FSMAssert( !activating && !updating, "Cannot execute a state command while updating or entering a state. Your test/exec must happen outside the FSM.");
 			FSMAssert( testedTransition != NULL && testedTransition->getCommand() == command, "Attempting to execute a transition which was not tested.");
 			testedTransition->exec(param);
 			const std::string& target = testedTransition->getTarget();
@@ -538,43 +572,59 @@ namespace FSM {
 			states[state.getName()] = &state;
 		}
 
-		bool stateExists(const std::string &name)
+		bool stateExists(const std::string &_name)
 		{
-			return getState(name) != NULL;
+			return getState(_name) != NULL;
 		}
 
-		State* getState(const std::string &name)
+		State* getState(const std::string &_name)
 		{
-			return states[name];
+			return states[_name];
 		}
 
 		void activate()
 		{
+			activating = true;
 			activateState(this);
+			activating = false;
 		}
 
 		void update(float dt)
 		{
-			testIntegrity();
+			//testIntegrity();
+
+			timeInState += dt;
 
 			//update each active state. 
 			//right now, states update from top down
 			State *state = getActiveChild();
 			State *leafmost = NULL;
+
+			updating = true;
 			while( state != NULL )
 			{
 				state->update(dt);
 				leafmost = state;
 				state = state->getActiveChild();
 			}
+			updating = false;
 
+			// if we receive a state change in the update loop, it supercedes any other transition tests
+
+			if( queuedStateChange != "" )
+			{
+				changeState( queuedStateChange );
+				return;
+			}
+
+			updating = true;
 			state = leafmost;
 			//test transitions from leafmost updwards
 			while( state != NULL )
 			{
-				std::vector<TransitionBase* > &transitions = state->getTransitions();
+				std::vector<TransitionBase* > &transitionsVector = state->getTransitions();
 
-				for(std::vector<TransitionBase*>::const_iterator it = transitions.begin(); it != transitions.end(); ++it)
+				for(std::vector<TransitionBase*>::const_iterator it = transitionsVector.begin(); it != transitionsVector.end(); ++it)
 				{
 					TransitionBase* trans = *it;
 
@@ -582,12 +632,14 @@ namespace FSM {
 					{
 						trans->exec();
 						changeState(trans->getTarget());
+						updating = false;
 						return;
 					}
 				}
 
 				state = state->getParent();
 			}
+			updating = false;
 
 
 		}
@@ -596,6 +648,12 @@ namespace FSM {
 		{
 			if(activeState)
 				activeState->valid();
+		}
+
+		void queueStateChange( const std::string& _name )
+		{
+			FSMAssert( updating, "Can only queue a state change from within a state update.");
+			queuedStateChange = _name;
 		}
 
 	protected:
@@ -633,9 +691,9 @@ namespace FSM {
 		
 		}
 
-		void changeState(const std::string& name)
+		void changeState(const std::string& _name)
 		{
-			State *targetState = getState(name);
+			State *targetState = getState(_name);
 			FSMAssert(targetState != NULL, "target state for state change not found.");
 			std::stack< State* > activeParents;
 			std::stack< State* > targetParents;
@@ -671,12 +729,13 @@ namespace FSM {
 
 		void activateState(State* state)
 		{
+			timeInState = 0.0f;
 			State *enterState = state;
 			while(enterState != NULL)
 			{
 				FSMAssert(!enterState->active, "Trying to activate an already active state.");
-				enterState->enter();
 				activeState = enterState;
+				enterState->enter();
 				enterState = enterState->getInitialChild();
 			}
 		}
@@ -687,7 +746,9 @@ namespace FSM {
 
 }
 
+#ifdef _WIN32
 #pragma warning (pop)
+#endif 
 
 
 #endif
