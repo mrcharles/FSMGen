@@ -9,9 +9,11 @@ namespace FSMGen.Attributes
     public class TokenAttribute : System.Attribute
     {
         public string id { get; set; }
-        public TokenAttribute(string id)
+        public bool replace { get; set; }
+        public TokenAttribute(string id, bool replace = false)
         {
             this.id = id;
+            this.replace = replace;
         }
     }
 }

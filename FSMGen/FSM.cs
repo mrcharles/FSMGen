@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Reflection;
 
 using FSMGen.Visitors;
 using FSMGen.Statements;
@@ -25,41 +26,37 @@ namespace FSMGen
 		//temp hack so we don't pop the entire parsed fsm off the stack and thus lose it.
 		Statement lastpopped;
 
-        static Dictionary<string, Type> GetTokenDictionary()
+        static void GetTokensFromAssembly(Assembly assembly, Dictionary<string, Type> dict)
         {
-            Dictionary<string, Type> dict = new Dictionary<string,Type>(StringComparer.CurrentCultureIgnoreCase);
-            foreach (Type type in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+            foreach (Type type in assembly.GetTypes())
             {
-                foreach ( TokenAttribute token in type.GetCustomAttributes(typeof(TokenAttribute), false))
+                foreach (TokenAttribute token in type.GetCustomAttributes(typeof(TokenAttribute), false))
                 {
                     System.Diagnostics.Debug.Assert(!dict.ContainsKey(token.id), "Multiple classes are flagged to handle the same token, this is not supported.");
                     dict.Add(token.id, type);
                 }
             }
+        }
+
+        static Dictionary<string, Type> GetTokenDictionary(Config config)
+        {
+            Dictionary<string, Type> dict = new Dictionary<string,Type>(StringComparer.CurrentCultureIgnoreCase);
+            GetTokensFromAssembly(System.Reflection.Assembly.GetExecutingAssembly(), dict);
+
+            //now pull anything out of any other loaded assemblies
+            foreach (Assembly a in config.Extensions)
+            {
+                GetTokensFromAssembly(a, dict);
+            }
+
             return dict;
         }
 
-        static void InitTokensDictionary()
+        static void InitTokensDictionary(Config config)
 		{
 			if (Tokens == null)
 			{
-                Tokens = GetTokenDictionary();
-
-                
-                //Tokens.Add("startfsm", typeof(GlobalStatement));
-                //Tokens.Add("class", typeof(ClassStatement));
-                //Tokens.Add("interfacecommand", typeof(InterfaceCommandStatement));
-                //Tokens.Add("state", typeof(StateStatement));
-                //Tokens.Add("test", typeof(TestStatement));
-                //Tokens.Add("initial", typeof(InitialStatement));
-                //Tokens.Add("update", typeof(UpdateStatement));
-                //Tokens.Add("transition", typeof(TransitionStatement));
-                //Tokens.Add("endstate", typeof(GenericPopStatement));
-                //Tokens.Add("endfsm", typeof(GenericPopStatement));
-
-				//tokens.Add("class", new Token() { argcount = 1, StatementType = typeof(ClassStatement) });
-				//tokens.Add("interfacecommand", new Token() { argcount = 1, StatementType = typeof(InterfaceCommandStatement) });
-				//tokens.Add("state", new Token() { argcount = 1, StatementType = typeof(StateStatement) });
+                Tokens = GetTokenDictionary(config);
 
 			}
 		}
@@ -74,7 +71,7 @@ namespace FSMGen
 		public FSM(FSMFile _file)
 		{
             file = _file;
-			InitTokensDictionary();
+			InitTokensDictionary( _file.config );
 
             StreamReader stream = new StreamReader(file.SourceFile);
 

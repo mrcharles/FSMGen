@@ -8,7 +8,7 @@ namespace FSMGen
 {
     public class FSMFile
     {
-        Config config;
+        public Config config;
         
         string fullname;
         string name;

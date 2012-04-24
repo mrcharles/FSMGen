@@ -4,16 +4,38 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Xml.Serialization;
+using System.Reflection;
 using FSMGen.Visitors;
+
 
 namespace FSMGen
 {
+    public class InvalidConfigException : Exception
+    { 
+        public InvalidConfigException() { }
+
+        public InvalidConfigException(string message)
+            : base(message)
+        { }
+
+        public InvalidConfigException(string message, System.Exception inner)
+            : base(message, inner)
+        { }
+
+        protected InvalidConfigException(System.Runtime.Serialization.SerializationInfo info,
+            System.Runtime.Serialization.StreamingContext context)
+            : base(info, context)
+        { }
+    
+    }
+
     public class ConfigData
     {
         public string commandsdb;
         //public bool useglobalcommands;
         public string commandheaderfile;
         public string[] visitors;
+        public string[] extensionassemblies;
         public string implementationextension;
         public string definitionextension;
 
@@ -35,12 +57,31 @@ namespace FSMGen
         ConfigData data;
         string configFile;
         string rootPath;
+        List<Assembly> extensions;
+        public List<Assembly> Extensions
+        {
+            get
+            {
+                return extensions;
+            }
+        }
 
         public IEnumerable<Type> VisitorTypes()
         {
             foreach (string s in data.visitors)
             {
-                Type visitor = Type.GetType("FSMGen.Visitors." + s, true);
+                Type visitor = Type.GetType(s);
+
+                if( visitor == null )
+                    foreach (Assembly a in extensions)
+                    {
+                        visitor = a.GetType(s);
+                        if (visitor != null)
+                            break;
+                    }
+
+                if (visitor == null)
+                    throw new InvalidConfigException("Visitor " + s + "not found in any assembly.");
 
                 yield return visitor;
             }
@@ -111,10 +152,26 @@ namespace FSMGen
             catch(Exception)
             {
                 data = new ConfigData();
-                
+
                 StreamWriter stream = new StreamWriter(configfile, false);
                 XmlSerializer xml = new XmlSerializer(typeof(ConfigData));
                 xml.Serialize(stream, data);
+            }
+
+            //load any assemblies
+            extensions = new List<Assembly>();
+            if (data.extensionassemblies.Length > 0)
+            {
+                foreach (string s in data.extensionassemblies)
+                {
+                    Assembly a = Assembly.LoadFrom(Path.Combine(rootPath, s));
+                    extensions.Add(a);
+                }
+            }
+
+            //verify our visitors
+            foreach (Type t in VisitorTypes())
+            { 
             }
         }
     }

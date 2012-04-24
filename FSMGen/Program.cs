@@ -71,22 +71,32 @@ namespace FSMGen
 			//MessageBox.Show("startin asdfasdfsadfg");
             if (args.Length > 0)
             {
-                int arg = 0;
-                if (Path.GetExtension(args[arg]) == ".config")
+                try
                 {
-                    config = new Config(args[arg]);
-                    arg++;
+
+                    int arg = 0;
+                    if (Path.GetExtension(args[arg]) == ".config")
+                    {
+                        config = new Config(args[arg]);
+                        arg++;
+                    }
+                    else
+                    {
+                        config = new Config();
+                    }
+
+                    if (ShouldExport(args[arg]))
+                    {
+                        if (!ProcessFile(args[arg]))
+                            Environment.Exit(1);
+                    }
                 }
-                else 
+                catch (InvalidConfigException e)
                 {
-                    config = new Config();
+                    Console.WriteLine(e.Message);
+                    Environment.Exit(1);
                 }
 
-                if (ShouldExport(args[arg]))
-                {
-                    if (!ProcessFile(args[arg]))
-                        Environment.Exit(1);
-                }
             }
 
 			//foreach (string s in args)
