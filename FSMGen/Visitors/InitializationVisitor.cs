@@ -10,6 +10,8 @@ namespace FSMGen.Visitors
     public class InitializationVisitor : StateVisitor
     {
         StreamWriter stream;
+        public StreamWriter Stream { get { return stream; } }
+
 
         public InitializationVisitor(Config config, FSMFile file)
             : base(config, file)
@@ -23,7 +25,7 @@ namespace FSMGen.Visitors
 
         public override void Init()
         {
-            stream = new StreamWriter(fsmfile.ImplementationFile, true);
+            this.stream = new StreamWriter(fsmfile.ImplementationFile, true);
             stream.AutoFlush = false;
 
             stream.WriteLine("\tvoid InitializeFSM()");

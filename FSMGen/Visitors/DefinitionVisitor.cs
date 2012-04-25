@@ -13,7 +13,9 @@ namespace FSMGen.Visitors
         string cpp;
 
         FileStream cppfile;
+
         StreamWriter stream;
+        public StreamWriter Stream { get { return stream; } }
 
         public DefinitionVisitor( Config config, FSMFile file )
             : base( config, file )
@@ -26,7 +28,7 @@ namespace FSMGen.Visitors
         {
         }
 
-        void PrintFunc( string ret, string funcdef, string param, string retstatement="", string lame="")
+        public void PrintFunc( string ret, string funcdef, string param, string retstatement="", string lame="")
         {
             string test = funcdef + "(";
             if (!cpp.Contains(test))

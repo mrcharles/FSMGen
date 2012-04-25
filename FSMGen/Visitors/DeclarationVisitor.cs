@@ -11,6 +11,7 @@ namespace FSMGen.Visitors
     public class DeclarationVisitor : StateVisitor
     {
         StreamWriter stream;
+        public StreamWriter Stream { get { return stream; } }
 
         public DeclarationVisitor(Config config, FSMFile file)
             : base(config, file)
