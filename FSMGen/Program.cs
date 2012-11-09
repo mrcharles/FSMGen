@@ -63,6 +63,8 @@ namespace FSMGen
 				return false;
 			}
 
+            Console.WriteLine("\t...done!");
+
             return true;
 		}
 
@@ -73,7 +75,6 @@ namespace FSMGen
             {
                 try
                 {
-
                     int arg = 0;
                     if (Path.GetExtension(args[arg]) == ".config")
                     {
@@ -85,10 +86,15 @@ namespace FSMGen
                         config = new Config();
                     }
 
+                    Console.WriteLine("Processing file " + args[arg] + "...");
                     if (ShouldExport(args[arg]))
                     {
                         if (!ProcessFile(args[arg]))
                             Environment.Exit(1);
+                    }
+                    else
+                    {
+                        Console.WriteLine("\tFile " + args[arg] + " is up to date!");
                     }
                 }
                 catch (InvalidConfigException e)
@@ -97,6 +103,11 @@ namespace FSMGen
                     Environment.Exit(1);
                 }
 
+            }
+            else
+            {
+                Console.WriteLine("FSMGen called without parameters. Usage:");
+                Console.WriteLine("\tFSMGen [configfile.config] fsmfile.fsm");
             }
 
 			//foreach (string s in args)
