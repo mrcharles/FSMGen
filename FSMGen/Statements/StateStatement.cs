@@ -12,6 +12,11 @@ namespace FSMGen.Statements
     {
         List<Statement> statements = new List<Statement>();
 
+        public StateStatement()
+        { 
+        
+        }
+
         [Modifier("noenter")]
         public bool NoEnter
         {

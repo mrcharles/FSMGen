@@ -34,7 +34,8 @@ namespace FSMGen
                 {
                     if (!token.replace)
                         System.Diagnostics.Debug.Assert(!dict.ContainsKey(token.id), "Multiple classes are flagged to handle the same token, this is not supported. If you meant to replace a token with an extension, please make sure you specify the replace flag in the attribute.");
-                    dict.Add(token.id, type);
+                    dict[token.id] = type;
+                    
                 }
             }
         }

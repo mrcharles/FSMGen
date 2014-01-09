@@ -40,6 +40,8 @@ namespace FSMGen
 		{
             FSMFile fsmfile = new FSMFile(file, config);
 
+            fsmfile.ResetImplementation();
+
 			FSM fsm = null;
 			try
 			{

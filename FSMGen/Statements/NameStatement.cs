@@ -18,6 +18,9 @@ namespace FSMGen.Statements
             }
 
             name = tokens.Dequeue();
+
+            base.Consume(tokens);
+
         }
 
     }

@@ -11,6 +11,14 @@
 #pragma warning (disable: 4100)
 #endif
 
+#include "../../External/slip/slip.h"
+
+DECLARESLIPTAG(FSMUpdate);
+
+DECLARESLIPTAG(FSMUpdateTimers);
+DECLARESLIPTAG(FSMUpdateStates);
+DECLARESLIPTAG(FSMTestTransitions);
+
 namespace FSM {
 
 	void FSMError(const std::string &text);
@@ -168,8 +176,9 @@ namespace FSM {
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param)
 		{
-			(void)param;
-			return InterfaceResult::Failed;
+			if( param != NULL )
+				return InterfaceResult::Failed;
+			return InterfaceResult::Unhandled;
 		}
 		virtual void exec(InterfaceParam* param )
 		{
@@ -189,7 +198,9 @@ namespace FSM {
 
 		virtual InterfaceResult::Enum test(InterfaceParam* param)
 		{
-			return InterfaceResult::Success;
+			if( param != NULL )
+				return InterfaceResult::Success;
+			return InterfaceResult::Unhandled;
 		}
 		virtual void exec(InterfaceParam* param )
 		{
@@ -210,6 +221,110 @@ namespace FSM {
 
 	};
 
+	class TimerDelegate
+	{
+	public:
+		virtual ~TimerDelegate(){}
+		virtual void onTimer(){}
+	};
+
+	template <class T>
+	class TimerDelegateT : public TimerDelegate
+	{
+	public:
+		virtual ~TimerDelegateT() {}
+		typedef void(T::*voidFunc)();
+
+	private:
+		voidFunc timer;
+		T* instance;
+	public:
+		TimerDelegateT()
+		{
+			timer = NULL;
+			instance = NULL;
+		}
+
+		void init( T* _instance, voidFunc _timer)
+		{
+			timer = _timer;
+			instance = _instance;
+		}
+		virtual void onTimer()
+		{
+			if(timer)
+				(instance->*timer)();
+		}
+	
+	};
+
+	class Timer
+	{
+	protected:
+		bool started;
+		float time;
+		std::string name;
+		TimerDelegate *delegate;
+
+	public:
+		void init(const std::string& _name, TimerDelegate *_delegate)
+		{
+			time = 0.0f;
+			started = false;
+			name = _name;
+			delegate = _delegate;
+		}
+		
+		const std::string& getName() const
+		{
+			return name;
+		}
+
+		void start(float _time)
+		{
+			time = _time;
+			started = true;
+		}
+
+		bool isStarted()
+		{
+			return started;
+		}
+
+		float getTime()
+		{
+			if(started)
+				return time;
+			else
+				return 0.0f;
+		}
+
+		void stop()
+		{
+			started = false;
+			time = 0.0f;
+		}
+		
+		void update(float dt)
+		{
+			if(!started || isElapsed())
+				return;
+
+			time -= dt;
+		}
+
+		void onElapsed()
+		{
+			delegate->onTimer();
+		}
+
+		bool isElapsed()
+		{
+			return started && time <= 0.0f;
+		}
+
+	};
+
 	class StateDelegate
 	{
 	public:
@@ -217,6 +332,7 @@ namespace FSM {
 		virtual void onEnter() = 0;
 		virtual void onExit() = 0;
 		virtual void onUpdate(float dt) = 0;
+		virtual void onJump(InterfaceParam *param) = 0;
 	};
 
 	template <class T>
@@ -225,11 +341,13 @@ namespace FSM {
 	public:
 		typedef void(T::*voidFunc)();	  
 		typedef void(T::*updateFunc)(float dt);	
+		typedef void(T::*jumpFunc)(InterfaceParam* param);
 
 	private:
 		voidFunc enter;
 		voidFunc exit;
 		updateFunc update;
+		jumpFunc jump;
 		T* instance;
 
 	public:
@@ -239,6 +357,7 @@ namespace FSM {
 			exit = NULL;
 			update = NULL;
 			instance = NULL;
+			jump = NULL;
 		}
 
 		virtual ~StateDelegateT(){}
@@ -250,6 +369,11 @@ namespace FSM {
 			update = _update;
 			instance = _instance;
 		}
+		void setJump(jumpFunc _jump)
+		{
+			jump = _jump;
+		}
+
 		virtual void onEnter()
 		{
 			if(enter)
@@ -265,6 +389,11 @@ namespace FSM {
 			if(update)
 				(instance->*update)(dt);
 		}
+		virtual void onJump(InterfaceParam* param)
+		{
+			if(jump)
+				(instance->*jump)(param);
+		}
 	};
 
 #define FSM_INIT( ) \
@@ -278,9 +407,22 @@ namespace FSM {
 	FSM.registerState(statename);
 
 #define FSM_INIT_STATE_EXPLICIT( statename, initial, enter, exit, update) \
-	statename##Delegate.init( this, enter, exit, update ); \
+	statename##Delegate.init( this, enter, exit, update); \
 	statename.init(#statename, initial, & statename##Delegate); \
 	FSM.registerState(statename);
+
+#define FSM_SET_JUMP( classname, statename ) \
+	statename##Delegate.setJump( & ##classname::onJumpTo##statename ); \
+	FSM.registerJump( #statename );
+
+#define FSM_INIT_TIMER( classname, timername, statename ) \
+	timername##TimerDelegate.init( this, & ##classname::on##timername##Timer ); \
+	timername##Timer.init( #timername, & timername##TimerDelegate ); \
+	statename.registerTimer( this->timername##Timer );
+
+#define FSM_INIT_TIMER_HANDLER( classname, timername, statename ) \
+	statename##timername##TimerDelegate.init( this, & ##classname::on##statename##Handle##timername##Timer ); \
+	statename.registerTimerHandler( #timername,  this->statename##timername##TimerDelegate );
 
 //this macro uses this-> to enable pretty names for transitions. 
 #define FSM_INIT_TRANSITION( classname, statename, targetname ) \
@@ -342,6 +484,11 @@ namespace FSM {
 		StateDelegate* delegate;
 		std::vector<TransitionBase* > transitions;
 
+		std::vector<Timer*> timers;
+
+		typedef std::map< std::string, TimerDelegate* >	timerMap;
+		timerMap timerHandlers;
+
 	public:
 		//state status data
 		bool active;
@@ -368,6 +515,34 @@ namespace FSM {
 		const std::string& getName() const
 		{
 			return name;
+		}
+
+		void registerTimer( Timer& timer )
+		{
+			timers.push_back( & timer );
+		}
+
+		std::vector<Timer*>& getTimers()
+		{
+			return timers;
+		}
+
+		void registerTimerHandler( const std::string& name, TimerDelegate& delegate )
+		{
+			FSMAssert( timerHandlers[name] == NULL, "A second timer handler is being registered for a timer. There can be only one.");
+			timerHandlers[name] = &delegate;
+		}
+
+		void timerElapsed( const std::string& name )
+		{
+			timerMap::const_iterator it = timerHandlers.find( name );
+
+			if (it != timerHandlers.end())
+			{
+				(*it).second->onTimer();
+			}
+
+
 		}
 
 		void registerTransition( TransitionBase& transition)
@@ -442,6 +617,17 @@ namespace FSM {
 		{
 			delegate->onExit();
 			active = false;
+
+			//stop all timers
+			for( std::vector<Timer*>::iterator it = timers.begin(); it != timers.end(); ++it )
+			{
+				(*it)->stop();
+			}
+		}
+
+		void jumpTo(InterfaceParam *param)
+		{
+			delegate->onJump(param);
 		}
 
 		void enter()
@@ -494,8 +680,12 @@ namespace FSM {
 		std::map<std::string, State*> states;
 		State* activeState;
 		TransitionBase* testedTransition;
+
+		std::vector<std::string> jumps;
+
 		bool updating;		
 		bool activating;
+		bool dirty;
 		std::string queuedStateChange;
 		float timeInState;
 
@@ -508,6 +698,7 @@ namespace FSM {
 			updating = false;
 			activating = false;
 			timeInState = 0.0f;
+			dirty = false;
 		}
 
 		void status()
@@ -556,20 +747,71 @@ namespace FSM {
 			return InterfaceResult::Unhandled;
 		}
 
+		void jumpCommand(int command, FSM::InterfaceParam *param)
+		{
+			FSMAssert( command < jumps.size(), "jump command is not valid" );
+			FSMAssert( param != NULL, "jump command requires an interface param" );
+
+			const std::string &target = jumps[command];
+
+			dirty = true;
+			State *targetState = getState(target);
+			FSMAssert(targetState != NULL, "target state for state change not found.");
+			std::stack< State* > activeParents;
+			std::stack< State* > targetParents;
+
+			activeState->getParents(activeParents);
+			targetState->getParents(targetParents);
+		  
+		    State *root = getCommonParent(activeParents, targetParents);
+
+			if(activeState != targetState)
+			{
+				//send exits, active state up to parents
+				State *exitState = activeState;
+				while( exitState != NULL && exitState != root )
+				{
+					exitState->exit();
+					exitState = exitState->getParent();
+				}
+			}
+			else
+			{
+				activeState->exit();
+			}
+
+			//we've exited out to a common root, now we have to call our setup function for jumping
+			targetState->jumpTo(param);
+
+			//now we have to activate our new state, and go down the chain 
+			//activating initial state until we get to the leafmost
+			FSMAssert( targetState->getParent() == root, "target state must be a sibling of a state in active state's parent tree. FSM now broken.");
+
+			activateState(targetState);
+		}
+
 		void execCommand(int command, FSM::InterfaceParam *param)
 		{
-			FSMAssert( !activating && !updating, "Cannot execute a state command while updating or entering a state. Your test/exec must happen outside the FSM.");
+			FSMAssert( !activating && !updating, "Cannot execute a state command while updating or entering a state.");
 			FSMAssert( testedTransition != NULL && testedTransition->getCommand() == command, "Attempting to execute a transition which was not tested.");
 			testedTransition->exec(param);
-			const std::string& target = testedTransition->getTarget();
-			if(target != "") //this will be "" in the case where we are running a command. 
-				changeState(testedTransition->getTarget());
-			testedTransition = NULL;
+			if( testedTransition )   //to allow for an exec changing state on us.
+			{
+				const std::string& target = testedTransition->getTarget();
+				if(target != "") //this will be "" in the case where we are running a command. 
+					changeState(testedTransition->getTarget());
+				testedTransition = NULL;
+			}
 		}
 
 		void registerState(State& state)
 		{
 			states[state.getName()] = &state;
+		}
+		
+		void registerJump( const std::string& name )
+		{
+			jumps.push_back(name);
 		}
 
 		bool stateExists(const std::string &_name)
@@ -592,55 +834,110 @@ namespace FSM {
 		void update(float dt)
 		{
 			//testIntegrity();
+			slip::scoper s(SLIP_FSMUpdate);
+
+			if( queuedStateChange != "" )
+			{
+				changeState( queuedStateChange );
+				queuedStateChange = "";
+			}
+
+			dirty = false;
 
 			timeInState += dt;
 
 			//update each active state. 
 			//right now, states update from top down
-			State *state = getActiveChild();
-			State *leafmost = NULL;
+			State *state = this; //getActiveChild();
 
-			updating = true;
-			while( state != NULL )
 			{
-				state->update(dt);
-				leafmost = state;
-				state = state->getActiveChild();
-			}
-			updating = false;
+				slip::scoper s( SLIP_FSMUpdateTimers );
+				//update timers before update step
+				std::vector< std::string > elapsedTimers;
+				while( state != NULL )
+				{
+					//test elapsed timers first
+					for( std::vector< std::string >::const_iterator it = elapsedTimers.begin(); 
+						 it != elapsedTimers.end(); ++it )
+					{
+						state->timerElapsed( *it );
+						if( dirty )
+							return;
+					}
 
+					//test owned timers
+					for( std::vector< Timer* >::iterator it = state->getTimers().begin() ;
+						 it != state->getTimers().end(); ++it )
+					{
+						Timer* timer = *it;
+						timer->update(dt);
+						if( timer->isElapsed() )
+						{
+							timer->stop();
+							timer->onElapsed();
+							if( dirty ) //state change was triggered.this update is officially OVER
+							{
+								return;
+							}
+							elapsedTimers.push_back( timer->getName() );
+						}
+
+					}
+
+					state = state->getActiveChild();
+				}
+			}
+
+			state = getActiveChild();
+			State *leafmost = NULL;
+			{
+				slip::scoper s(SLIP_FSMUpdateStates);
+
+				updating = true;
+				while( state != NULL )
+				{
+					state->update(dt);
+					leafmost = state;
+					state = state->getActiveChild();
+				}
+				updating = false;
+			}
 			// if we receive a state change in the update loop, it supercedes any other transition tests
 
 			if( queuedStateChange != "" )
 			{
 				changeState( queuedStateChange );
+				queuedStateChange = "";
 				return;
 			}
 
-			updating = true;
-			state = leafmost;
-			//test transitions from leafmost updwards
-			while( state != NULL )
 			{
-				std::vector<TransitionBase* > &transitionsVector = state->getTransitions();
-
-				for(std::vector<TransitionBase*>::const_iterator it = transitionsVector.begin(); it != transitionsVector.end(); ++it)
+				slip::scoper s(SLIP_FSMTestTransitions);
+				updating = true;
+				state = leafmost;
+				//test transitions from leafmost updwards
+				while( state != NULL )
 				{
-					TransitionBase* trans = *it;
+					std::vector<TransitionBase* > &transitionsVector = state->getTransitions();
 
-					if(trans->test() == InterfaceResult::Success)
+					for(std::vector<TransitionBase*>::const_iterator it = transitionsVector.begin(); it != transitionsVector.end(); ++it)
 					{
-						trans->exec();
-						changeState(trans->getTarget());
-						updating = false;
-						return;
+						TransitionBase* trans = *it;
+
+						if(trans->test() == InterfaceResult::Success)
+						{
+							trans->exec();
+
+							changeState(trans->getTarget());
+							updating = false;
+							return;
+						}
 					}
+
+					state = state->getParent();
 				}
-
-				state = state->getParent();
+				updating = false;
 			}
-			updating = false;
-
 
 		}
 
@@ -693,6 +990,7 @@ namespace FSM {
 
 		void changeState(const std::string& _name)
 		{
+			dirty = true;
 			State *targetState = getState(_name);
 			FSMAssert(targetState != NULL, "target state for state change not found.");
 			std::stack< State* > activeParents;
@@ -738,6 +1036,19 @@ namespace FSM {
 				enterState->enter();
 				enterState = enterState->getInitialChild();
 			}
+		}
+
+		public:
+		void deactivate()
+		{
+			//send exits, active state up to parents
+			State *exitState = activeState;
+			while( exitState != NULL )
+			{
+				exitState->exit();
+				exitState = exitState->getParent();
+			}
+			activeState = NULL;
 		}
 
 	};

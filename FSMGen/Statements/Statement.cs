@@ -16,9 +16,7 @@ namespace FSMGen.Statements
 
         public virtual void Consume(Queue<string> tokens) 
         {
-            if (tokens.Count <= 0)
-                return;
-            while (tokens.Peek().StartsWith("+"))
+            while (tokens.Count > 0 && tokens.Peek().StartsWith("+"))
                 HandleModifier(tokens.Dequeue());
         }
         public void HandleModifier(string _modifier)

@@ -22,6 +22,17 @@ namespace FSMGen
             config = _config;
         }
 
+        public void ResetImplementation()
+        {
+            string name = ImplementationFile;
+
+            StreamWriter w = new StreamWriter(name, false);
+
+            w.WriteLine("// FSM Implementation File");
+
+            w.Close();
+        }
+
         public string SourceFile
         {
             get

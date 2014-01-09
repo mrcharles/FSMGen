@@ -23,7 +23,7 @@ namespace FSMGen.Visitors
 
         public override void Init()
         {
-            stream = new StreamWriter(fsmfile.ImplementationFile);
+            stream = new StreamWriter(fsmfile.ImplementationFile, true);
             stream.AutoFlush = false;
 
             stream.WriteLine("public:");

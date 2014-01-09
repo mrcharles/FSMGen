@@ -24,11 +24,18 @@ namespace FSMGen.Visitors
 
             string funcname = "Visit" + statementtypename;
 
-            MethodInfo mi = this.GetType().GetMethod(funcname);
+            MethodInfo mi = this.GetType().GetMethod(funcname, new [] { s.GetType() });
 
             if (mi != null)
             {
-                mi.Invoke(this, new object[] { s });
+                try
+                {
+                    mi.Invoke(this, new[] { s });
+                }
+                catch (TargetInvocationException e)
+                {
+                    throw e.InnerException;
+                }
             }
         }
         public abstract void End();
