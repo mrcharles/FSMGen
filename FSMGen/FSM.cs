@@ -70,6 +70,14 @@ namespace FSMGen
 			return false;
 		}
 
+		static public bool IsComment(string token)
+		{
+			if (token.StartsWith("//") || token.StartsWith("--") || token.StartsWith(";"))
+				return true;
+			return false;
+		}
+		
+
 		public FSM(FSMFile _file)
 		{
             file = _file;
@@ -85,6 +93,9 @@ namespace FSMGen
                     currentLine++;
                     rawtokens = new Queue<string>(stream.ReadLine().Split(null));
 
+					if (IsComment(rawtokens.Peek()))
+						continue;
+						
                     while (rawtokens.Count > 0)
                     {
                         string token = rawtokens.Dequeue();
