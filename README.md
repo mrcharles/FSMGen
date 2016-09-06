@@ -30,7 +30,7 @@ __endstate__
 
 Ends a state definition.
 
-## State modifiers
+## State information
 
 __initial__
 
@@ -71,6 +71,44 @@ Transitions are polled per frame, and when the test function returns true, the e
 __transition _STATENAME___
 
 Defines an internal transition to _STATENAME_. Transitions can only be to sibling states or siblings of parent states.
+
+## Attributes
+
+Various commands can have attributes. Those attributes modify the functionality of the given statement.
+
+__+allow__
+
+Use: transition command
+Causes transition to not generate a test function, instead allowing the command by default.
+
+__+noexec__
+
+Causes transition or test to not generate an exec function, useful for when you don't want to implement one. 
+
+__+noexit__
+
+Use: state
+
+Suppresses generation of an onStateExit function
+
+__+noenter__
+
+Use: state
+
+Suppresses generation of an onStateEnter function
+
+
+## FSM Extension Functionality
+
+__state__
+
+	__+target__
+
+	This modifier for states allows you to use special functionality to jump to a state, no matter where in the hierarchy it is. Note that this requires knowledge of where you are jumping from and to, and can be dangerous.
+
+	__timer _TIMERNAME___
+
+	This state info creates a named timer which can be referenced to determine how long you were in a state.
 
 
 
